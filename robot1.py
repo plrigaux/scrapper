@@ -18,6 +18,7 @@ import os.path
 from pathlib import Path
 import time
 import configparser
+import utilities
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -34,12 +35,14 @@ def main():
     gallery = 'https://www.imagefap.com/pictures/9160216/Valory-Irene-Katerina-Hartlova-%7C-Good-Morning?gid=9160216&page=2&view=0'
     gallery = 'https://www.imagefap.com/pictures/8320839/Brittany-Bardot-gets-Rachels-fist-up-her-bum'
     gallery = "https://www.imagefap.com/photo/683150892/?pgid=&gid=8021417&page=0&idx=18"
+    gallery = 'https://www.imagefap.com/photo/872088544/?pgid=&gid=8068100&page=0&idx=2'
+    gallery = 'https://www.imagefap.com/pictures/9166638/Swiss-Conceptual-Performance-Artist-Milo-Moire.-Extasia'
 
     cleanUrl = setUpGallery(gallery)
     print(cleanUrl)
     
 
-    galleryName = getGalleryName(driver.current_url)
+    galleryName = utilities.getGalleryName(driver.current_url)
 
     # find first picture
     xpath = '/html/body/center/table[2]/tbody/tr/td[1]/table/tbody/tr/td[1]/div/center/table/tbody/tr/td/table/tbody/tr/td/center/div[1]/form/table/tbody/tr[1]/td[1]/table/tbody/tr[1]/td/a'
@@ -50,7 +53,7 @@ def main():
     imgIndex = -1
     lastsrc = ""
     while True:
-        newImgIndex = getImgIndex()
+        newImgIndex = getImgIndex(driver.current_url)
 
         if (newImgIndex < imgIndex):
             print("End loop! {} iteration done".format(i - 1))
@@ -92,7 +95,7 @@ def main():
 
 def setUpGallery(gallery):
 
-    cleanUrl = gallery.rsplit('?', 1)[0]
+    cleanUrl = utilities.getGalleryName(gallery)
 
     m = re.search(r'/photo/(\d+)/', gallery)
 
@@ -121,23 +124,9 @@ def getOriginalFileName():
 
     return match.group(0)
 
-
-def getGalleryName(gallery):
-    gallery = urlparse.unquote(gallery)
-    parsed = urlparse.urlparse(gallery)
-
-    print(parsed)
-    print(parsed.path)
-    name = parsed.path.rsplit('/', 1)[-1]
-    name = re.sub(r'[<>:"/\|?*]', '_', name)
-    print("Gllery name: " + name)
-
-    return name
-
-
-def getImgIndex():
-    print(driver.current_url)
-    parsed = urlparse.urlparse(driver.current_url)
+def getImgIndex(current_url):
+    print(current_url)
+    parsed = urlparse.urlparse(current_url)
 
     print(parsed.fragment)
 
