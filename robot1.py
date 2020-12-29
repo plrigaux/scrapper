@@ -19,6 +19,8 @@ from pathlib import Path
 import time
 import configparser
 import utilities
+import sys
+import urlqueue
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -26,17 +28,29 @@ outputDirectory = config['DEFAULT']['outputDirectory']
 
 
 def main():
+
+    sg = urlqueue.SourceGetter()
+    
+    gallery = sg.getFirstValid()
+
     global driver
     driver = webdriver.Chrome()
 
-    gallery = 'https://www.imagefap.com/pictures/9147089/Nevaeh-Sniper'
-    gallery = 'https://www.imagefap.com/pictures/9157754/The-Simpson%27s-Merry-Christmas'
-    gallery = 'https://www.imagefap.com/pictures/9160455/Theresa-Presenting-Theresa?gid=9160455&page=5&view=0'
-    gallery = 'https://www.imagefap.com/pictures/9160216/Valory-Irene-Katerina-Hartlova-%7C-Good-Morning?gid=9160216&page=2&view=0'
-    gallery = 'https://www.imagefap.com/pictures/8320839/Brittany-Bardot-gets-Rachels-fist-up-her-bum'
-    gallery = "https://www.imagefap.com/photo/683150892/?pgid=&gid=8021417&page=0&idx=18"
-    gallery = 'https://www.imagefap.com/photo/872088544/?pgid=&gid=8068100&page=0&idx=2'
-    gallery = 'https://www.imagefap.com/pictures/9166638/Swiss-Conceptual-Performance-Artist-Milo-Moire.-Extasia'
+    #gallery = 'https://www.imagefap.com/pictures/9147089/Nevaeh-Sniper'
+    #gallery = 'https://www.imagefap.com/pictures/9157754/The-Simpson%27s-Merry-Christmas'
+    #gallery = 'https://www.imagefap.com/pictures/9160455/Theresa-Presenting-Theresa?gid=9160455&page=5&view=0'
+    #gallery = 'https://www.imagefap.com/pictures/9160216/Valory-Irene-Katerina-Hartlova-%7C-Good-Morning?gid=9160216&page=2&view=0'
+    #gallery = 'https://www.imagefap.com/pictures/8320839/Brittany-Bardot-gets-Rachels-fist-up-her-bum'
+    #gallery = "https://www.imagefap.com/photo/683150892/?pgid=&gid=8021417&page=0&idx=18"
+    #gallery = 'https://www.imagefap.com/photo/872088544/?pgid=&gid=8068100&page=0&idx=2'
+    #gallery = 'https://www.imagefap.com/pictures/9166638/Swiss-Conceptual-Performance-Artist-Milo-Moire.-Extasia'
+    #gallery = 'https://www.imagefap.com/pictures/9171882/Nathalie-la-petite-hotesse.-French-comic-%2F-BD'
+    #gallery = 'https://www.imagefap.com/pictures/9173133/Sensual-Jane-Big-Time-Sensuality?gid=9173133&page=3&view=0'
+    #gallery = 'https://www.imagefap.com/pictures/9167640/Peta-Jensen-Horny-Slut'
+
+    #gallery = config['DEFAULT']['gallery']
+
+
 
     cleanUrl = setUpGallery(gallery)
     print(cleanUrl)
@@ -92,6 +106,8 @@ def main():
         i = i + 1
         # next picture
         nextPicture()
+    
+    driver.quit()
 
 def setUpGallery(gallery):
 

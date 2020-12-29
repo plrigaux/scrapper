@@ -20,8 +20,9 @@ class MyDriver():
 
     def click(self, by):
 
-        	(new WebDriverWait(driver, 10)).until(ExpectedConditions.elementToBeClickable(by));
-	driver.findElement(by).click();
+        #	(new WebDriverWait(driver, 10)).until(ExpectedConditions.elementToBeClickable(by));
+	    #driver.findElement(by).click();
 
-    img = WebDriverWait(driver, 15, ignored_exceptions=ignored_exceptions)\
-            .until(expected_conditions.presence_of_element_located((By.XPATH, imgpath)))
+        #img = WebDriverWait(driver, 15, ignored_exceptions=ignored_exceptions)\
+        #    .until(expected_conditions.presence_of_element_located((By.XPATH, imgpath)))
+        pass
