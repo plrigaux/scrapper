@@ -58,6 +58,7 @@ class SourceGetter():
         return None
 
     def getFirstValid(self):
+        print("Copy (Ctrl-c) a valid url ...")
         while True:
                 ### fetch clipboard content and check for new url; add to queue if valid url is detected
             if url := self.checkClipboard():
