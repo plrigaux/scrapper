@@ -4,12 +4,11 @@ import re
 
 
 def getGalleryName(gallery) -> str:
-    gallery = urlparse.unquote(gallery)
+    
     parsed = urlparse.urlparse(gallery)
-
-    print(parsed)
-    print(parsed.path)
     name = parsed.path.rsplit('/', 1)[-1]
+
+    name = urlparse.unquote(name)
     name = re.sub(r'[<>:"/\|?*]', '_', name)
     print("Gallery name: " + name)
 

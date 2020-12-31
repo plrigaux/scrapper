@@ -16,14 +16,16 @@ class TestStringMethods(unittest.TestCase):
 
     def test_galleryName(self):
 
-        gallery = 'https://www.imagefap.com/pictures/9157754/The-Simpson%27s-Merry-Christmas'
+        galleries = [('https://www.imagefap.com/pictures/9157754/The-Simpson%27s-Merry-Christmas', "The-Simpson's-Merry-Christmas"),
+                     ('https://www.imagefap.com/pictures/9171882/Nathalie-la-petite-hotesse.-French-comic-%2F-BD', "Nathalie-la-petite-hotesse.-French-comic-_-BD")]
 
-        name = utilities.getGalleryName(gallery)
+        for tuple in galleries:
+            cleaned = utilities.getGalleryName(tuple[0])
+            self.assertEqual(cleaned, tuple[1])
 
-        self.assertEqual("The-Simpson's-Merry-Christmas", name)
 
     def test_cleanURL(self):
-        list = [
+        testlist = [
             ('https://www.imagefap.com/pictures/8320839/Brittany-Bardot-gets-Rachels-fist-up-her-bum',
              'https://www.imagefap.com/pictures/8320839/Brittany-Bardot-gets-Rachels-fist-up-her-bum'),
             ("https://www.imagefap.com/photo/683150892/?pgid=&gid=8021417&page=0&idx=18",
@@ -32,9 +34,10 @@ class TestStringMethods(unittest.TestCase):
              'https://www.imagefap.com/photo/872088544/')
         ]
 
-        for tuple in list:
+        for tuple in testlist:
             cleaned = utilities.getCleanURL(tuple[0])
             self.assertEqual(cleaned, tuple[1])
+
 
 if __name__ == '__main__':
     unittest.main()

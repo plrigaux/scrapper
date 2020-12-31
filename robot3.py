@@ -9,25 +9,20 @@ from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.common.exceptions import ElementNotInteractableException
 
 import re
-from urllib.request import urlretrieve
 from urllib.request import urlopen
 import urllib.parse as urlparse
-from urllib.parse import parse_qs
-import shutil
 import os.path
-from pathlib import Path
+
 import time
-import configparser
 import utilities
-import sys
 import urlqueue
 import collections
-
-config = configparser.ConfigParser()
-config.read('config.ini')
-outputDirectory = config['DEFAULT']['outputDirectory']
+import configData
 
 driver = None
+
+# see all pictures
+params = {'page': '0', 'view': '2'}
 
 def main():
 
@@ -35,8 +30,7 @@ def main():
     
     gallery = sg.getFirstValid()
 
-    # see all pictures
-    params = {'page': '0', 'view': '2'}
+
 
     print(gallery)
 
@@ -86,9 +80,9 @@ def main():
 
 def thePictureGraber(galleryName, nbOfPics, listOfPics):
 
-    dirName = os.path.join(outputDirectory, galleryName)
-    Path(dirName).mkdir(parents=True, exist_ok=True)
-    print("file:///" + dirName)
+    dirName = configData.createAndGetOutputDirectory(galleryName)
+
+    print("Output dir: " + dirName)
 
     for picture in listOfPics:
         print(picture)
@@ -96,8 +90,6 @@ def thePictureGraber(galleryName, nbOfPics, listOfPics):
 
         src = findImgUrl()
         print("image: {}".format(src))
-
-        
 
         parsedSrc = urlparse.urlparse(src)
         extention = parsedSrc.path.rsplit('.', 1)[-1]
@@ -111,7 +103,7 @@ def thePictureGraber(galleryName, nbOfPics, listOfPics):
         output.write(resource.read())
         output.close()
 
-    print("file:///" + dirName)
+    print("Output dir: " + dirName)
 
 def setUpGallery(gallery, params):
 
@@ -125,7 +117,12 @@ def setUpGallery(gallery, params):
         # go to the gallery
         element = driver.find_element_by_xpath(
             '//*[@id="main"]/center/table[2]/tbody/tr/td/table/tbody/tr/td/center/div[4]/div[3]/table/tbody/tr[1]/td[2]/a')
-        element.click()
+        
+        galleryLocation = element.get_attribute('href')
+
+        galleryLocation = setUpGallery(galleryLocation, params)
+
+        driver.get(galleryLocation)
         gallery = driver.current_url
     else:
         # you are on the gallery

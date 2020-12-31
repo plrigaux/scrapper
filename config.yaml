@@ -1,4 +1,3 @@
-config:
-  outputDirectory: D:/media/xtreamdownloader
-  #browser=firefox
-  browser: chrome
+outputDirectory: D:/media/xtreamdownloader
+#browser=firefox
+browser: chrome
