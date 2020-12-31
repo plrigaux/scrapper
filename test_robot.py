@@ -20,7 +20,7 @@ class TestStringMethods(unittest.TestCase):
                      ('https://www.imagefap.com/pictures/9171882/Nathalie-la-petite-hotesse.-French-comic-%2F-BD', "Nathalie-la-petite-hotesse.-French-comic-_-BD")]
 
         for tuple in galleries:
-            cleaned = utilities.getGalleryName(tuple[0])
+            cleaned = utilities.getGalleryNameFromURL(tuple[0])
             self.assertEqual(cleaned, tuple[1])
 
 

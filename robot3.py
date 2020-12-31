@@ -1,3 +1,4 @@
+from webdriver import MyDriver
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -12,17 +13,17 @@ import re
 from urllib.request import urlopen
 import urllib.parse as urlparse
 import os.path
-
-import time
 import utilities
 import urlqueue
-import collections
 import configData
+from picture import Picture
 
 driver = None
 
 # see all pictures
 params = {'page': '0', 'view': '2'}
+
+#Picture = collections.namedtuple('Picture', 'index href fileName')
 
 def main():
 
@@ -30,20 +31,29 @@ def main():
     
     gallery = sg.getFirstValid()
 
-
-
     print(gallery)
 
     # exit()
     global driver
-    driver = webdriver.Chrome()
+    driver = MyDriver()
+    galleryData = {}
 
     #gallery = config['DEFAULT']['gallery']
 
     cleanUrl = setUpGallery(gallery, params)
     print(cleanUrl)
 
-    galleryName = utilities.getGalleryName(driver.current_url)
+    current_url = driver.current_url()
+    print(type(current_url))
+    print(current_url)
+    print('---------------------------------------------------------')
+    galleryData['galleryName'] = utilities.getGalleryNameFromURL(current_url)
+
+    xpath ='//*[@id="menubar"]/table/tbody/tr[1]/td[2]/table/tbody/tr/td[1]/b[1]/font'
+    galleryNameTitle = driver.find_element_by_xpath(xpath)
+    galleryData['galleryName'] = utilities.getGalleryName(galleryNameTitle.text)
+
+    print (galleryData['galleryName'])
 
     # find first picture
     xpath = '//*[@id="gallery"]/form/table'
@@ -57,7 +67,11 @@ def main():
 
     img = galleryTable.find_element_by_xpath('.//table/tbody/tr[1]/td/a/img')
 
-    Picture = collections.namedtuple('Picture', 'index href fileName')
+
+    alt = img.get_attribute('alt')
+    print(alt)
+
+    galleryData['nbOfPics'] = utilities.getNumber(alt)
 
     listOfPics = []
     for i, item in enumerate(listId):
@@ -65,26 +79,23 @@ def main():
         pic = Picture(i, href, item.text)
         listOfPics.append(pic)
 
-    alt = img.get_attribute('alt')
-    print(alt)
+    galleryData['listOfPics'] = listOfPics
+    
+    print("read: {} found: {}".format(galleryData['nbOfPics'], len(galleryData['listOfPics'])))
 
-    nbOfPics = utilities.getNumber(alt)
-
-    print("read: {} found: {}".format(nbOfPics, len(listOfPics)))
-
-    thePictureGraber(galleryName, nbOfPics, listOfPics)
+    thePictureGraber(galleryData)
 
     print("Download successs!")
     
     driver.quit()
 
-def thePictureGraber(galleryName, nbOfPics, listOfPics):
+def thePictureGraber(galleryData):
 
-    dirName = configData.createAndGetOutputDirectory(galleryName)
+    dirName = configData.createAndGetOutputDirectory(galleryData['galleryName'])
 
     print("Output dir: " + dirName)
 
-    for picture in listOfPics:
+    for picture in galleryData['listOfPics']:
         print(picture)
         driver.get(picture.href)
 
@@ -92,11 +103,11 @@ def thePictureGraber(galleryName, nbOfPics, listOfPics):
         print("image: {}".format(src))
 
         parsedSrc = urlparse.urlparse(src)
-        extention = parsedSrc.path.rsplit('.', 1)[-1]
+        picture.extention = parsedSrc.path.rsplit('.', 1)[-1]
 
-        imgFileName = findOriginalFileName(picture.fileName, driver.title) 
+        picture.fileName = findOriginalFileName(picture.fileName, driver.title()) 
 
-        file_name = os.path.join(dirName, imgFileName)
+        file_name = os.path.join(dirName, picture.fileName)
 
         resource = urlopen(src)
         output = open(file_name, "wb")
@@ -104,10 +115,11 @@ def thePictureGraber(galleryName, nbOfPics, listOfPics):
         output.close()
 
     print("Output dir: " + dirName)
+    configData.dumpData(galleryData, dirName)
 
 def setUpGallery(gallery, params):
 
-    cleanUrl = utilities.getGalleryName(gallery)
+    cleanUrl = utilities.getGalleryNameFromURL(gallery)
 
     m = re.search(r'/photo/(\d+)/', gallery)
 
@@ -151,7 +163,7 @@ def findImgUrl():
     ignored_exceptions = (NoSuchElementException,
                           StaleElementReferenceException)
     try:
-        img = WebDriverWait(driver, 15, ignored_exceptions=ignored_exceptions)\
+        img = WebDriverWait(driver.driver, 15, ignored_exceptions=ignored_exceptions)\
             .until(expected_conditions.presence_of_element_located((By.XPATH, imgpath)))
 
         src = img.get_attribute('src')

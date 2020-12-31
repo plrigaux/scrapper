@@ -56,7 +56,7 @@ def main():
     print(cleanUrl)
     
 
-    galleryName = utilities.getGalleryName(driver.current_url)
+    galleryName = utilities.getGalleryNameFromURL(driver.current_url)
 
     # find first picture
     xpath = '/html/body/center/table[2]/tbody/tr/td[1]/table/tbody/tr/td[1]/div/center/table/tbody/tr/td/table/tbody/tr/td/center/div[1]/form/table/tbody/tr[1]/td[1]/table/tbody/tr[1]/td/a'
@@ -111,7 +111,7 @@ def main():
 
 def setUpGallery(gallery):
 
-    cleanUrl = utilities.getGalleryName(gallery)
+    cleanUrl = utilities.getGalleryNameFromURL(gallery)
 
     m = re.search(r'/photo/(\d+)/', gallery)
 

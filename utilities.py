@@ -3,13 +3,19 @@ import urllib.parse as urlparse
 import re
 
 
-def getGalleryName(gallery) -> str:
-    
+def getGalleryNameFromURL(gallery) -> str:
+    print(gallery)
     parsed = urlparse.urlparse(gallery)
     name = parsed.path.rsplit('/', 1)[-1]
 
     name = urlparse.unquote(name)
-    name = re.sub(r'[<>:"/\|?*]', '_', name)
+
+    return getGalleryName(name)
+
+def getGalleryName(gallery) -> str:
+    
+    #name = re.sub(r'[<>:"/\|?*]', '_', gallery)
+    name = gallery
     print("Gallery name: " + name)
 
     return name

@@ -1,4 +1,5 @@
 from selenium import webdriver
+
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -7,22 +8,31 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.common.exceptions import ElementNotInteractableException
+from selenium.webdriver.remote.webelement import WebElement
 
 
 class MyDriver():
 
-    def __init__(self, browser):
+    def __init__(self):
+        self.driver = webdriver.Chrome()
+        self.ignored_exceptions = (NoSuchElementException,
+                                   StaleElementReferenceException)
 
-        if (browser.lower == 'firefox'):
-            self.driver = webdriver.Firefox()
-        else:
-            self.driver = webdriver.Chrome()   
+    def find_element_by_xpath(self, xpath) -> WebElement:
+        return WebDriverWait(self.driver, 200, ignored_exceptions=self.ignored_exceptions)\
+            .until(expected_conditions.presence_of_element_located((By.XPATH, xpath)))
 
-    def click(self, by):
+    def current_url(self) -> str:
+        return self.driver.current_url
 
-        #	(new WebDriverWait(driver, 10)).until(ExpectedConditions.elementToBeClickable(by));
-	    #driver.findElement(by).click();
+    def quit(self) -> None:
+        self.driver.quit()
 
-        #img = WebDriverWait(driver, 15, ignored_exceptions=ignored_exceptions)\
-        #    .until(expected_conditions.presence_of_element_located((By.XPATH, imgpath)))
-        pass
+    def get(self, url) -> None:
+        self.driver.get(url)
+
+    def title(self) -> str:
+        return self.driver.title
+
+
+        
