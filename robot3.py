@@ -25,10 +25,11 @@ params = {'page': '0', 'view': '2'}
 
 #Picture = collections.namedtuple('Picture', 'index href fileName')
 
-def main():
+
+def main(galleryData):
 
     sg = urlqueue.SourceGetter()
-    
+
     gallery = sg.getFirstValid()
 
     print(gallery)
@@ -36,7 +37,6 @@ def main():
     # exit()
     global driver
     driver = MyDriver()
-    galleryData = {}
 
     #gallery = config['DEFAULT']['gallery']
 
@@ -48,12 +48,13 @@ def main():
     print(current_url)
     print('---------------------------------------------------------')
     galleryData['galleryName'] = utilities.getGalleryNameFromURL(current_url)
-
-    xpath ='//*[@id="menubar"]/table/tbody/tr[1]/td[2]/table/tbody/tr/td[1]/b[1]/font'
+    galleryData['galleryURL'] = current_url
+    xpath = '//*[@id="menubar"]/table/tbody/tr[1]/td[2]/table/tbody/tr/td[1]/b[1]/font'
     galleryNameTitle = driver.find_element_by_xpath(xpath)
-    galleryData['galleryName'] = utilities.getGalleryName(galleryNameTitle.text)
+    galleryData['galleryName'] = utilities.getGalleryName(
+        galleryNameTitle.text)
 
-    print (galleryData['galleryName'])
+    print(galleryData['galleryName'])
 
     # find first picture
     xpath = '//*[@id="gallery"]/form/table'
@@ -65,57 +66,80 @@ def main():
 
     listURL = galleryTable.find_elements_by_xpath('.//table/tbody/tr[1]/td/a')
 
+    # get Nb of pics base on page info
     img = galleryTable.find_element_by_xpath('.//table/tbody/tr[1]/td/a/img')
-
-
     alt = img.get_attribute('alt')
-    print(alt)
-
     galleryData['nbOfPics'] = utilities.getNumber(alt)
 
     listOfPics = []
     for i, item in enumerate(listId):
         href = listURL[i].get_attribute('href')
-        pic = Picture(i, href, item.text)
+        pic = Picture(i, href, item.text, 'new')
         listOfPics.append(pic)
 
     galleryData['listOfPics'] = listOfPics
-    
-    print("read: {} found: {}".format(galleryData['nbOfPics'], len(galleryData['listOfPics'])))
+
+    print("read: {} found: {}".format(
+        galleryData['nbOfPics'], len(galleryData['listOfPics'])))
 
     thePictureGraber(galleryData)
 
     print("Download successs!")
-    
+
     driver.quit()
+
 
 def thePictureGraber(galleryData):
 
-    dirName = configData.createAndGetOutputDirectory(galleryData['galleryName'])
-
+    dirName = configData.createAndGetOutputDirectory(
+        galleryData['galleryName'])
     print("Output dir: " + dirName)
+    currentDalleryData = configData.getCurrentData(dirName)
 
-    for picture in galleryData['listOfPics']:
+    if currentDalleryData:
+        galleryData['listOfPics'] = currentDalleryData['listOfPics']
+    else:
+        galleryData['nbDownloaded'] = 0
+        configData.dumpData(galleryData, dirName)
+
+    listOfPics = galleryData['listOfPics']
+    galleryDataLenght = len(listOfPics)
+    nbBatchDownloaded = 0
+
+    #TODO not download option
+    
+    for i, picture in enumerate(listOfPics, start = 1):
         print(picture)
-        driver.get(picture.href)
+        if (picture.status == 'new'):
+            print("Downloading {} of {} ...".format(i, galleryDataLenght))
 
-        src = findImgUrl()
-        print("image: {}".format(src))
+            driver.get(picture.href)
 
-        parsedSrc = urlparse.urlparse(src)
-        picture.extention = parsedSrc.path.rsplit('.', 1)[-1]
+            src = findImgUrl()
+            print("image: {}".format(src))
 
-        picture.fileName = findOriginalFileName(picture.fileName, driver.title()) 
+            parsedSrc = urlparse.urlparse(src)
+            picture.extention = parsedSrc.path.rsplit('.', 1)[-1]
 
-        file_name = os.path.join(dirName, picture.fileName)
+            picture.fileName = findOriginalFileName(
+                picture.fileName, driver.title())
 
-        resource = urlopen(src)
-        output = open(file_name, "wb")
-        output.write(resource.read())
-        output.close()
+            file_name = os.path.join(dirName, picture.fileName)
+
+            resource = urlopen(src)
+            output = open(file_name, "wb")
+            output.write(resource.read())
+            output.close()
+
+            picture.status = 'downloaded'
+            nbBatchDownloaded = nbBatchDownloaded + 1
+            galleryData['nbBatchDownloaded'] = nbBatchDownloaded
+            galleryData['nbTotalDownloaded'] = picture.index
+        else:
+            print("Pass {} of {}".format(i, galleryDataLenght))
 
     print("Output dir: " + dirName)
-    configData.dumpData(galleryData, dirName)
+
 
 def setUpGallery(gallery, params):
 
@@ -129,7 +153,7 @@ def setUpGallery(gallery, params):
         # go to the gallery
         element = driver.find_element_by_xpath(
             '//*[@id="main"]/center/table[2]/tbody/tr/td/table/tbody/tr/td/center/div[4]/div[3]/table/tbody/tr[1]/td[2]/a')
-        
+
         galleryLocation = element.get_attribute('href')
 
         galleryLocation = setUpGallery(galleryLocation, params)
@@ -147,6 +171,7 @@ def setUpGallery(gallery, params):
 
     return url
 
+
 def findOriginalFileName(galleryFileName, pageTitle) -> str:
     fileName = ""
     if (galleryFileName.endswith("...")):
@@ -155,7 +180,7 @@ def findOriginalFileName(galleryFileName, pageTitle) -> str:
         fileName = galleryFileName
 
     return fileName
-    
+
 
 def findImgUrl():
     imgpath = '//*[@id="slideshow"]/center/div[1]/span/img'
@@ -173,6 +198,7 @@ def findImgUrl():
 
     return src
 
+
 def removePopup():
     xpbtn = '/html/body/div[3]/div/div[1]/div'
     try:
@@ -185,4 +211,13 @@ def removePopup():
         pass
 
 
-main()
+galleryData = {}
+try:
+    main(galleryData)
+finally:
+
+    if 'galleryName' in galleryData:
+        dirName = configData.createAndGetOutputDirectory(
+            galleryData['galleryName'])
+        configData.dumpData(galleryData, dirName)
+        print("Gallery directory: " + dirName)

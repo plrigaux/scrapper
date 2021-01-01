@@ -42,6 +42,14 @@ class SourceGetter():
             clipb = ''
         return clipb
 
+    def emptyClipboard(self):
+        clip = Tk()
+        clip.withdraw()
+        clip.clipboard_clear()
+        #clip.clipboard_append('i can has clipboardz?')
+        clip.update() # now it stays on the clipboard after the window is closed
+        clip.destroy()
+
     def checkClipboard(self):
         # check if clipboard content has changed
         # check if the new content is a valid url and add to queue
@@ -53,6 +61,7 @@ class SourceGetter():
             urltype = self.checkUrl(clipboard)
             if urltype:
                 print("OK " + clipboard)
+                self.emptyClipboard()
                 return clipboard
         
         return None
