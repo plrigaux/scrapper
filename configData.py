@@ -5,6 +5,9 @@ import collections
 from pathlib import Path
 import picture
 
+
+dataYaml = '!data.yaml'
+
 # Read YAML file
 with open("config.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
@@ -44,7 +47,7 @@ def dumpData(data, dirName):
 
     data['listOfPics'] = newListOfPics
 
-    outputFile = os.path.join(dirName, 'data.yaml')
+    outputFile = os.path.join(dirName, dataYaml)
     with open(outputFile, 'w') as file:
         yaml.dump(
             data, file,  default_flow_style=False, sort_keys=False)
@@ -95,12 +98,17 @@ def test1():
 """
 
 def getCurrentData(directory) -> dict:
-    fileName = os.path.join(directory, 'data.yaml')
+    fileName = os.path.join(directory, dataYaml)
     fileName = os.path.normpath(fileName)
     
     if (os.path.exists(fileName) == False):
         print ("file doesn't exists: " + fileName)
-        return None
+        fileName = os.path.join(directory, "data.yaml")
+    
+        if (os.path.exists(fileName) == False):
+            print ("file doesn't exists: " + fileName)
+            return None
+        
     
     with open(fileName, 'r') as stream:
         data = yaml.safe_load(stream)

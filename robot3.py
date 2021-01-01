@@ -53,7 +53,7 @@ def main(galleryData):
     galleryNameTitle = driver.find_element_by_xpath(xpath)
     galleryData['galleryName'] = utilities.getGalleryName(
         galleryNameTitle.text)
-
+    galleryData['galleryURL'] = driver.current_url()
     print(galleryData['galleryName'])
 
     # find first picture
@@ -99,7 +99,8 @@ def thePictureGraber(galleryData):
     if currentDalleryData:
         galleryData['listOfPics'] = currentDalleryData['listOfPics']
     else:
-        galleryData['nbDownloaded'] = 0
+        galleryData['nbBatchDownloaded'] = 0
+        galleryData['nbTotalDownloaded'] = 0
         configData.dumpData(galleryData, dirName)
 
     listOfPics = galleryData['listOfPics']
@@ -107,7 +108,9 @@ def thePictureGraber(galleryData):
     nbBatchDownloaded = 0
 
     #TODO not download option
-    
+
+    #TODO handle https://www.imagefap.com/rl_captcha.php
+
     for i, picture in enumerate(listOfPics, start = 1):
         print(picture)
         if (picture.status == 'new'):
@@ -134,7 +137,7 @@ def thePictureGraber(galleryData):
             picture.status = 'downloaded'
             nbBatchDownloaded = nbBatchDownloaded + 1
             galleryData['nbBatchDownloaded'] = nbBatchDownloaded
-            galleryData['nbTotalDownloaded'] = picture.index
+            galleryData['nbTotalDownloaded'] = i
         else:
             print("Pass {} of {}".format(i, galleryDataLenght))
 
@@ -157,7 +160,8 @@ def setUpGallery(gallery, params):
         galleryLocation = element.get_attribute('href')
 
         galleryLocation = setUpGallery(galleryLocation, params)
-
+        print("galleryLocation " + galleryLocation)
+        
         driver.get(galleryLocation)
         gallery = driver.current_url
     else:
@@ -166,7 +170,7 @@ def setUpGallery(gallery, params):
         cleanUrl = utilities.urlSetParams(gallery, params)
         driver.get(cleanUrl)
 
-    url = driver.current_url
+    url = driver.current_url()
     print(url)
 
     return url
