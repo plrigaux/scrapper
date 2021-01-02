@@ -17,6 +17,8 @@ import utilities
 import urlqueue
 import configData
 from picture import Picture
+import base64
+from PIL import Image
 
 driver = None
 
@@ -46,6 +48,9 @@ def main(galleryData):
     current_url = driver.current_url()
     print(type(current_url))
     print(current_url)
+    if ('rl_captcha.php' in current_url):
+        handleCaptcha()
+
     print('---------------------------------------------------------')
     galleryData['galleryName'] = utilities.getGalleryNameFromURL(current_url)
     galleryData['galleryURL'] = current_url
@@ -107,11 +112,12 @@ def thePictureGraber(galleryData):
     galleryDataLenght = len(listOfPics)
     nbBatchDownloaded = 0
 
-    #TODO not download option
+    # TODO not download option
 
-    #TODO handle https://www.imagefap.com/rl_captcha.php
+    # TODO handle https://www.imagefap.com/rl_captcha.php
+    # INFO https://gist.github.com/spirkaa/4c3b8ad8fd34324bd307
 
-    for i, picture in enumerate(listOfPics, start = 1):
+    for i, picture in enumerate(listOfPics, start=1):
         print(picture)
         if (picture.status == 'new'):
             print("Downloading {} of {} ...".format(i, galleryDataLenght))
@@ -119,6 +125,7 @@ def thePictureGraber(galleryData):
             driver.get(picture.href)
 
             src = findImgUrl()
+            picture.imgSrc = src
             print("image: {}".format(src))
 
             parsedSrc = urlparse.urlparse(src)
@@ -130,9 +137,9 @@ def thePictureGraber(galleryData):
             file_name = os.path.join(dirName, picture.fileName)
 
             resource = urlopen(src)
-            output = open(file_name, "wb")
-            output.write(resource.read())
-            output.close()
+            with open(file_name, "wb") as output:
+                output.write(resource.read())
+                output.close()
 
             picture.status = 'downloaded'
             nbBatchDownloaded = nbBatchDownloaded + 1
@@ -161,7 +168,7 @@ def setUpGallery(gallery, params):
 
         galleryLocation = setUpGallery(galleryLocation, params)
         print("galleryLocation " + galleryLocation)
-        
+
         driver.get(galleryLocation)
         gallery = driver.current_url
     else:
@@ -214,6 +221,44 @@ def removePopup():
     except ElementNotInteractableException:
         pass
 
+
+def handleCaptcha():
+    captchaXpath = '/html/body/div/form/div[1]/div[2]/img'
+
+
+    #get_captcha(driver, ele_captcha, "captcha.jpeg")
+    #print (ele_captcha)
+
+    img_base64 = driver.driver.execute_script("""
+    var ele = arguments[0];
+    var cnv = document.createElement('canvas');
+    cnv.width = ele.width; cnv.height = ele.height;
+    cnv.getContext('2d').drawImage(ele, 0, 0);
+    return cnv.toDataURL('image/jpeg').substring(22);    
+    """, driver.driver.find_element_by_xpath(captchaXpath))
+
+
+    with open(r"image3.jpg", 'wb') as f:
+        f.write(base64.b64decode(img_base64))
+
+def get_captcha(driver, element, path):
+    # now that we have the preliminary stuff out of the way time to get that image :D
+    location = element.location
+    size = element.size
+    # saves screenshot of entire page
+    driver.save_screenshot(path)
+
+    # uses PIL library to open image in memory
+    image = Image.open(path)
+
+    left = location['x']
+    top = location['y'] + 140
+    right = location['x'] + size['width']
+    bottom = location['y'] + size['height'] + 140
+
+    image = image.crop((left, top, right, bottom))  # defines crop points
+    image = image.convert('RGB')
+    image.save(path, 'jpeg')  # saves new cropped image
 
 galleryData = {}
 try:

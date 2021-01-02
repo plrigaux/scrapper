@@ -14,7 +14,8 @@ from selenium.webdriver.remote.webelement import WebElement
 class MyDriver():
 
     def __init__(self):
-        self.driver = webdriver.Chrome()
+        #self.driver = webdriver.Chrome()
+        self.driver = webdriver.Firefox()
         self.ignored_exceptions = (NoSuchElementException,
                                    StaleElementReferenceException)
 
@@ -34,5 +35,9 @@ class MyDriver():
     def title(self) -> str:
         return self.driver.title
 
+    def execute_script(self, script, webElement):
+        output = self.driver.execute_script(script, webElement)
+        return output
 
-        
+    def save_screenshot(self, path) -> bool:
+        return self.driver.save_screenshot(path)
