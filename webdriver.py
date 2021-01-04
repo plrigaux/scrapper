@@ -14,8 +14,16 @@ from selenium.webdriver.remote.webelement import WebElement
 class MyDriver():
 
     def __init__(self):
-        #self.driver = webdriver.Chrome()
-        self.driver = webdriver.Firefox()
+        self.driver = webdriver.Chrome()
+
+        #fFprofile = webdriver.FirefoxProfile()
+        # I also tried True, 1 - with and without quotes
+        #fFprofile.set_preference(   'network.websocket.allowInsecureFromHTTPS', True)
+        #fFprofile.DEFAULT_PREFERENCES['frozen']["dom.disable_open_during_load"] = True
+# FFprofile = webdriver.FirefoxProfile('C:/Users/ExampleUser/AppData/Local/Mozilla/Firefox/Profiles/owieroiuysd.testprofile')
+
+        #self.driver = webdriver.Firefox(firefox_profile = fFprofile)
+        #self.driver = webdriver.Firefox()
         self.ignored_exceptions = (NoSuchElementException,
                                    StaleElementReferenceException)
 

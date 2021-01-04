@@ -8,6 +8,48 @@ import picture
 
 dataYaml = '!data.yaml'
 
+class GalleryData(dict):
+    
+    def __init__(self, *args, **kwargs):
+        # No need for the self.__dict__ part
+        super().__init__(*args, **kwargs)
+        self.clean_strings()
+
+    def clean_strings(self):
+        for key, value in self.items():
+            self[key] = self.string_empty_to_none(value)
+
+    def __getattr__(self, name):
+        if not name in self:
+            raise AttributeError("Attribute {} does not exist".format(name))
+        return self[name]
+
+    def __setattr__(self, name, value):
+        self[name] = self.string_empty_to_none(value)
+
+    def __delattr__(self, name):
+        if not name in self:
+            raise AttributeError("Attribute {} does not exist".format(name))
+        del self[name]
+
+    def string_empty_to_none(self, value):
+        if(type(value) != str):
+            return value
+        
+        if (len(value) == 0) :
+            return None
+        
+        return value
+
+    def getGalleryURL(self, default="No URL :("):
+        return super().get("galleryURL", default)
+
+    def getNbOfPics(self, default=-1):
+        return super().get("nbOfPics", default)
+    
+    def getNbTotalDownloaded(self, default=-1):
+        return super().get("nbTotalDownloaded", default)
+
 # Read YAML file
 with open("config.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
@@ -97,17 +139,13 @@ def test1():
     print(o)
 """
 
-def getCurrentData(directory) -> dict:
+def getCurrentData(directory) -> GalleryData:
     fileName = os.path.join(directory, dataYaml)
     fileName = os.path.normpath(fileName)
     
     if (os.path.exists(fileName) == False):
         print ("file doesn't exists: " + fileName)
-        fileName = os.path.join(directory, "data.yaml")
-    
-        if (os.path.exists(fileName) == False):
-            print ("file doesn't exists: " + fileName)
-            return None
+        return None
         
     
     with open(fileName, 'r') as stream:
@@ -122,7 +160,10 @@ def getCurrentData(directory) -> dict:
 
     data['listOfPics'] = pics
 
-    return data
+    return GalleryData(data)
+
+
+
 
 if __name__ == "__main__":
     print("tests")

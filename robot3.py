@@ -8,9 +8,10 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.common.exceptions import ElementNotInteractableException
+from selenium.common.exceptions import TimeoutException
 
 import re
-from urllib.request import urlopen
+from urllib.request import proxy_bypass, urlopen
 import urllib.parse as urlparse
 import os.path
 import utilities
@@ -28,13 +29,29 @@ params = {'page': '0', 'view': '2'}
 #Picture = collections.namedtuple('Picture', 'index href fileName')
 
 
-def main(galleryData):
-
+def main():
     sg = urlqueue.SourceGetter()
 
     gallery = sg.getFirstValid()
 
-    print(gallery)
+    mainGalleryGrabber(gallery)
+
+def mainGalleryGrabber(galleryUrl):
+    galleryData = configData.GalleryData()
+    try:
+        mainGalleryGrabber2(galleryUrl, galleryData)
+    finally:
+
+        if 'galleryName' in galleryData:
+            dirName = configData.createAndGetOutputDirectory(
+                galleryData['galleryName'])
+            configData.dumpData(galleryData, dirName)
+            print("Gallery directory: " + dirName)
+        
+        print("Gallery url: " + galleryData.getGalleryURL())
+
+def mainGalleryGrabber2(galleryUrl, galleryData):
+    print(galleryUrl)
 
     # exit()
     global driver
@@ -42,7 +59,7 @@ def main(galleryData):
 
     #gallery = config['DEFAULT']['gallery']
 
-    cleanUrl = setUpGallery(gallery, params)
+    cleanUrl = setUpGallery(galleryUrl, params)
     print(cleanUrl)
 
     current_url = driver.current_url()
@@ -124,7 +141,8 @@ def thePictureGraber(galleryData):
 
             driver.get(picture.href)
 
-            src = findImgUrl()
+            img = findImgNode(galleryData)
+            src = img.get_attribute('src')
             picture.imgSrc = src
             print("image: {}".format(src))
 
@@ -136,19 +154,53 @@ def thePictureGraber(galleryData):
 
             file_name = os.path.join(dirName, picture.fileName)
 
-            resource = urlopen(src)
-            with open(file_name, "wb") as output:
-                output.write(resource.read())
-                output.close()
+            downloadImage1(src, file_name)
+            #downloadImage2(img, file_name)
 
             picture.status = 'downloaded'
             nbBatchDownloaded = nbBatchDownloaded + 1
             galleryData['nbBatchDownloaded'] = nbBatchDownloaded
-            galleryData['nbTotalDownloaded'] = i
         else:
             print("Pass {} of {}".format(i, galleryDataLenght))
 
+        galleryData['nbTotalDownloaded'] = i
     print("Output dir: " + dirName)
+
+def downloadImage1(src, file_name):
+    resource = urlopen(src)
+    
+    with open(file_name, "wb") as output:
+        output.write(resource.read())
+        output.close()
+
+    pass
+
+def downloadImage2(img, file_name):
+    #get_captcha(driver, ele_captcha, "captcha.jpeg")
+    #print (ele_captcha)
+
+    #img_base64 = driver.driver.execute_script("""
+    #var ele = arguments[0];
+    #var cnv = document.createElement('canvas');
+    #cnv.width = ele.width; cnv.height = ele.height;
+    #cnv.getContext('2d').drawImage(ele, 0, 0);
+    #return cnv.toDataURL('image/jpeg').substring(22);    
+    #""", img)
+
+    img_base64 = driver.driver.execute_async_script("""
+    var ele = arguments[0], callback = arguments[1];
+    ele.addEventListener('load', function fn(){
+      ele.removeEventListener('load', fn, false);
+      var cnv = document.createElement('canvas');
+      cnv.width = this.width; cnv.height = this.height;
+      cnv.getContext('2d').drawImage(this, 0, 0);
+      callback(cnv.toDataURL('image/jpeg').substring(22));
+    }, false);
+    ele.dispatchEvent(new Event('load'));
+    """, img)
+
+    with open(file_name, 'wb') as f:
+        f.write(base64.b64decode(img_base64))
 
 
 def setUpGallery(gallery, params):
@@ -193,21 +245,24 @@ def findOriginalFileName(galleryFileName, pageTitle) -> str:
     return fileName
 
 
-def findImgUrl():
+def findImgNode(galleryData):
     imgpath = '//*[@id="slideshow"]/center/div[1]/span/img'
     #imgpath = '/html/body/center/table[2]/tbody/tr/td[1]/table/tbody/tr/td[1]/div/center/table[2]/tbody/tr/td/table/tbody/tr/td/center/table/tbody/tr/td/div[5]/center/div[1]/span/img'
     ignored_exceptions = (NoSuchElementException,
                           StaleElementReferenceException)
     try:
-        img = WebDriverWait(driver.driver, 15, ignored_exceptions=ignored_exceptions)\
+        img = WebDriverWait(driver.driver, 150, ignored_exceptions=ignored_exceptions)\
             .until(expected_conditions.presence_of_element_located((By.XPATH, imgpath)))
-
-        src = img.get_attribute('src')
     except StaleElementReferenceException:
         # find again
-        return findImgUrl()
+        return findImgNode(galleryData)
+    except TimeoutException:
+        print ("Time out capturing img on: " + driver.current_url())
+        print (galleryData['galleryURL'])
+        raise
 
-    return src
+
+    return img
 
 
 def removePopup():
@@ -260,13 +315,16 @@ def get_captcha(driver, element, path):
     image = image.convert('RGB')
     image.save(path, 'jpeg')  # saves new cropped image
 
-galleryData = {}
-try:
-    main(galleryData)
-finally:
+if __name__ == '__main__':
+    galleryData = {}
+    try:
+        main(galleryData)
+    finally:
 
-    if 'galleryName' in galleryData:
-        dirName = configData.createAndGetOutputDirectory(
-            galleryData['galleryName'])
-        configData.dumpData(galleryData, dirName)
-        print("Gallery directory: " + dirName)
+        if 'galleryName' in galleryData:
+            dirName = configData.createAndGetOutputDirectory(
+                galleryData['galleryName'])
+            configData.dumpData(galleryData, dirName)
+            print("Gallery directory: " + dirName)
+        
+        print("Gallery url: " + galleryData['galleryURL'])
