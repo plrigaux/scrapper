@@ -258,7 +258,7 @@ def findOriginalFileName(galleryFileName, pageTitle) -> str:
     return fileName
 
 
-def findImgNode(galleryData, iter=0):
+def findImgNode(galleryData, callLevel=0):
     imgpath = '//*[@id="slideshow"]/center/div[1]/span/img'
     #imgpath = '/html/body/center/table[2]/tbody/tr/td[1]/table/tbody/tr/td[1]/div/center/table[2]/tbody/tr/td/table/tbody/tr/td/center/table/tbody/tr/td/div[5]/center/div[1]/span/img'
     ignored_exceptions = (NoSuchElementException,
@@ -266,22 +266,22 @@ def findImgNode(galleryData, iter=0):
     img = None
 
     #limit the stack
-    if (iter > 10):
+    if (callLevel > 10):
         return img
 
     try:
-        img = WebDriverWait(driver.driver, 15, ignored_exceptions=ignored_exceptions)\
+        img = WebDriverWait(driver.driver, 5, ignored_exceptions=ignored_exceptions)\
             .until(expected_conditions.presence_of_element_located((By.XPATH, imgpath)))
     except StaleElementReferenceException:
         # find again
-        return findImgNode(galleryData, iter + 1)
+        return findImgNode(galleryData, callLevel + 1)
     except TimeoutException:
         print ("Time out capturing img on: " + driver.current_url())
         print (galleryData['galleryURL'])
         currentUrl = driver.current_url()
         if ('rl_captcha.php' in currentUrl):
             handleCaptcha()
-            img = findImgNode(galleryData, iter + 1)
+            img = findImgNode(galleryData, callLevel + 1)
             
 
     return img
@@ -334,12 +334,13 @@ def handleCaptcha(level = 0):
     input = driver.find_element_by_xpath(inputXpath)
 
     input.send_keys(code)
-    time.sleep(10)
+    time.sleep(2)
+    """
     try:
         input.send_keys(Keys.ENTER)
     except StaleElementReferenceException:
         print("input.send_keys(Keys.ENTER)", StaleElementReferenceException)
-
+"""
     current_url = driver.current_url()
     if ('rl_captcha.php' in current_url):
         handleCaptcha(level + 1)
