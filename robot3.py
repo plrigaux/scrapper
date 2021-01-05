@@ -9,6 +9,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.common.exceptions import ElementNotInteractableException
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.keys import Keys
 
 import re
 from urllib.request import proxy_bypass, urlopen
@@ -20,6 +21,9 @@ import configData
 from picture import Picture
 import base64
 from PIL import Image
+from pathlib import Path
+import captcha
+import time
 
 driver = None
 
@@ -70,12 +74,12 @@ def mainGalleryGrabber2(galleryUrl, galleryData):
 
     print('---------------------------------------------------------')
     galleryData['galleryName'] = utilities.getGalleryNameFromURL(current_url)
-    galleryData['galleryURL'] = current_url
+    galleryData['galleryURL'] = utilities.getCleanURL(current_url)
     xpath = '//*[@id="menubar"]/table/tbody/tr[1]/td[2]/table/tbody/tr/td[1]/b[1]/font'
     galleryNameTitle = driver.find_element_by_xpath(xpath)
     galleryData['galleryName'] = utilities.getGalleryName(
         galleryNameTitle.text)
-    galleryData['galleryURL'] = driver.current_url()
+    galleryData['galleryURL'] = utilities.getCleanURL(driver.current_url())
     print(galleryData['galleryName'])
 
     # find first picture
@@ -128,6 +132,7 @@ def thePictureGraber(galleryData):
     listOfPics = galleryData['listOfPics']
     galleryDataLenght = len(listOfPics)
     nbBatchDownloaded = 0
+    nbTotalDownloaded = 0
 
     # TODO not download option
 
@@ -154,26 +159,34 @@ def thePictureGraber(galleryData):
 
             file_name = os.path.join(dirName, picture.fileName)
 
-            downloadImage1(src, file_name)
+            if (downloadImage1(src, file_name) == True):
             #downloadImage2(img, file_name)
 
-            picture.status = 'downloaded'
-            nbBatchDownloaded = nbBatchDownloaded + 1
-            galleryData['nbBatchDownloaded'] = nbBatchDownloaded
+                picture.status = 'downloaded'
+                nbBatchDownloaded = nbBatchDownloaded + 1
+                galleryData['nbBatchDownloaded'] = nbBatchDownloaded
+                nbTotalDownloaded = nbTotalDownloaded + 1
+            else:
+                picture.status = 'failed'
+
         else:
             print("Pass {} of {}".format(i, galleryDataLenght))
+            nbTotalDownloaded = nbTotalDownloaded + 1
 
-        galleryData['nbTotalDownloaded'] = i
+        galleryData['nbTotalDownloaded'] = nbTotalDownloaded    
+
     print("Output dir: " + dirName)
 
 def downloadImage1(src, file_name):
-    resource = urlopen(src)
-    
-    with open(file_name, "wb") as output:
-        output.write(resource.read())
-        output.close()
-
-    pass
+    try:
+        resource = urlopen(src)
+        
+        with open(file_name, "wb") as output:
+            output.write(resource.read())
+            output.close()
+        return True
+    except:
+        return False
 
 def downloadImage2(img, file_name):
     #get_captcha(driver, ele_captcha, "captcha.jpeg")
@@ -245,22 +258,31 @@ def findOriginalFileName(galleryFileName, pageTitle) -> str:
     return fileName
 
 
-def findImgNode(galleryData):
+def findImgNode(galleryData, iter=0):
     imgpath = '//*[@id="slideshow"]/center/div[1]/span/img'
     #imgpath = '/html/body/center/table[2]/tbody/tr/td[1]/table/tbody/tr/td[1]/div/center/table[2]/tbody/tr/td/table/tbody/tr/td/center/table/tbody/tr/td/div[5]/center/div[1]/span/img'
     ignored_exceptions = (NoSuchElementException,
                           StaleElementReferenceException)
+    img = None
+
+    #limit the stack
+    if (iter > 10):
+        return img
+
     try:
-        img = WebDriverWait(driver.driver, 150, ignored_exceptions=ignored_exceptions)\
+        img = WebDriverWait(driver.driver, 15, ignored_exceptions=ignored_exceptions)\
             .until(expected_conditions.presence_of_element_located((By.XPATH, imgpath)))
     except StaleElementReferenceException:
         # find again
-        return findImgNode(galleryData)
+        return findImgNode(galleryData, iter + 1)
     except TimeoutException:
         print ("Time out capturing img on: " + driver.current_url())
         print (galleryData['galleryURL'])
-        raise
-
+        currentUrl = driver.current_url()
+        if ('rl_captcha.php' in currentUrl):
+            handleCaptcha()
+            img = findImgNode(galleryData, iter + 1)
+            
 
     return img
 
@@ -277,7 +299,12 @@ def removePopup():
         pass
 
 
-def handleCaptcha():
+def handleCaptcha(level = 0):
+
+    if (level > 10):
+        print ("captcha", "FAIL")
+        raise "Bye"
+
     captchaXpath = '/html/body/div/form/div[1]/div[2]/img'
 
 
@@ -292,9 +319,30 @@ def handleCaptcha():
     return cnv.toDataURL('image/jpeg').substring(22);    
     """, driver.driver.find_element_by_xpath(captchaXpath))
 
+    dirPath = "stuff"
+    Path(dirPath).mkdir(parents=True, exist_ok=True)
 
-    with open(r"image3.jpg", 'wb') as f:
+    captchaPath = os.path.join(dirPath, "captcha.jpg")
+    with open(captchaPath, 'wb') as f:
         f.write(base64.b64decode(img_base64))
+
+    code = captcha.solve_captcha(captchaPath)
+    print("THE CAPTCHA IS: ", code)
+
+    inputXpath = '//*[@id="captcha"]'
+
+    input = driver.find_element_by_xpath(inputXpath)
+
+    input.send_keys(code)
+    time.sleep(10)
+    try:
+        input.send_keys(Keys.ENTER)
+    except StaleElementReferenceException:
+        print("input.send_keys(Keys.ENTER)", StaleElementReferenceException)
+
+    current_url = driver.current_url()
+    if ('rl_captcha.php' in current_url):
+        handleCaptcha(level + 1)
 
 def get_captcha(driver, element, path):
     # now that we have the preliminary stuff out of the way time to get that image :D
@@ -316,15 +364,5 @@ def get_captcha(driver, element, path):
     image.save(path, 'jpeg')  # saves new cropped image
 
 if __name__ == '__main__':
-    galleryData = {}
-    try:
-        main(galleryData)
-    finally:
+    main()
 
-        if 'galleryName' in galleryData:
-            dirName = configData.createAndGetOutputDirectory(
-                galleryData['galleryName'])
-            configData.dumpData(galleryData, dirName)
-            print("Gallery directory: " + dirName)
-        
-        print("Gallery url: " + galleryData['galleryURL'])

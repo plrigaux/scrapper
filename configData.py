@@ -4,7 +4,7 @@ import os.path
 import collections
 from pathlib import Path
 import picture
-
+import pprint
 
 dataYaml = '!data.yaml'
 
@@ -71,6 +71,8 @@ def createAndGetOutputDirectory(strPath) -> str:
 
 def dumpData(data, dirName):
 
+
+    data = dict(**data)
     oldPictures = data.pop('listOfPics', [])
 
     newListOfPics = {}
@@ -139,6 +141,15 @@ def test1():
     print(o)
 """
 
+def loadGalleryData(loader, node):
+    print("______________________________")
+    #print(loader)
+    print(type(node))
+    print("______________________________")
+    fields = loader.construct_mapping(node)
+    g = GalleryData(**fields)
+    return g
+
 def getCurrentData(directory) -> GalleryData:
     fileName = os.path.join(directory, dataYaml)
     fileName = os.path.normpath(fileName)
@@ -147,9 +158,9 @@ def getCurrentData(directory) -> GalleryData:
         print ("file doesn't exists: " + fileName)
         return None
         
-    
+    yaml.add_constructor("tag:yaml.org,2002:python/object/new:configData.GalleryData", loadGalleryData)
     with open(fileName, 'r') as stream:
-        data = yaml.safe_load(stream)
+        data = yaml.load(stream, Loader=yaml.Loader)
 
     picsDict = data.get('listOfPics', {})
 
@@ -161,9 +172,6 @@ def getCurrentData(directory) -> GalleryData:
     data['listOfPics'] = pics
 
     return GalleryData(data)
-
-
-
 
 if __name__ == "__main__":
     print("tests")
