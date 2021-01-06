@@ -26,7 +26,7 @@ import captcha
 import time
 
 driver = None
-
+CAPTCHA_PAGE = 'rl_captcha.php'
 # see all pictures
 params = {'page': '0', 'view': '2'}
 
@@ -40,6 +40,7 @@ def main():
 
     mainGalleryGrabber(gallery)
 
+
 def mainGalleryGrabber(galleryUrl):
     galleryData = configData.GalleryData()
     try:
@@ -48,11 +49,12 @@ def mainGalleryGrabber(galleryUrl):
 
         if 'galleryName' in galleryData:
             dirName = configData.createAndGetOutputDirectory(
-                galleryData['galleryName'])
+                galleryData.getGalleryName())
             configData.dumpData(galleryData, dirName)
             print("Gallery directory: " + dirName)
-        
+
         print("Gallery url: " + galleryData.getGalleryURL())
+
 
 def mainGalleryGrabber2(galleryUrl, galleryData):
     print(galleryUrl)
@@ -69,12 +71,11 @@ def mainGalleryGrabber2(galleryUrl, galleryData):
     current_url = driver.current_url()
     print(type(current_url))
     print(current_url)
-    if ('rl_captcha.php' in current_url):
+    if (CAPTCHA_PAGE in current_url):
         handleCaptcha()
 
     print('---------------------------------------------------------')
     galleryData['galleryName'] = utilities.getGalleryNameFromURL(current_url)
-    galleryData['galleryURL'] = utilities.getCleanURL(current_url)
     xpath = '//*[@id="menubar"]/table/tbody/tr[1]/td[2]/table/tbody/tr/td[1]/b[1]/font'
     galleryNameTitle = driver.find_element_by_xpath(xpath)
     galleryData['galleryName'] = utilities.getGalleryName(
@@ -84,7 +85,6 @@ def mainGalleryGrabber2(galleryUrl, galleryData):
 
     # find first picture
     xpath = '//*[@id="gallery"]/form/table'
-
     galleryTable = driver.find_element_by_xpath(xpath)
 
     listId = galleryTable.find_elements_by_xpath(
@@ -160,7 +160,7 @@ def thePictureGraber(galleryData):
             file_name = os.path.join(dirName, picture.fileName)
 
             if (downloadImage1(src, file_name) == True):
-            #downloadImage2(img, file_name)
+                #downloadImage2(img, file_name)
 
                 picture.status = 'downloaded'
                 nbBatchDownloaded = nbBatchDownloaded + 1
@@ -173,14 +173,15 @@ def thePictureGraber(galleryData):
             print("Pass {} of {}".format(i, galleryDataLenght))
             nbTotalDownloaded = nbTotalDownloaded + 1
 
-        galleryData['nbTotalDownloaded'] = nbTotalDownloaded    
+        galleryData['nbTotalDownloaded'] = nbTotalDownloaded
 
     print("Output dir: " + dirName)
+
 
 def downloadImage1(src, file_name):
     try:
         resource = urlopen(src)
-        
+
         with open(file_name, "wb") as output:
             output.write(resource.read())
             output.close()
@@ -188,17 +189,18 @@ def downloadImage1(src, file_name):
     except:
         return False
 
+
 def downloadImage2(img, file_name):
     #get_captcha(driver, ele_captcha, "captcha.jpeg")
     #print (ele_captcha)
 
-    #img_base64 = driver.driver.execute_script("""
-    #var ele = arguments[0];
-    #var cnv = document.createElement('canvas');
+    # img_base64 = driver.driver.execute_script("""
+    # var ele = arguments[0];
+    # var cnv = document.createElement('canvas');
     #cnv.width = ele.width; cnv.height = ele.height;
     #cnv.getContext('2d').drawImage(ele, 0, 0);
-    #return cnv.toDataURL('image/jpeg').substring(22);    
-    #""", img)
+    # return cnv.toDataURL('image/jpeg').substring(22);
+    # """, img)
 
     img_base64 = driver.driver.execute_async_script("""
     var ele = arguments[0], callback = arguments[1];
@@ -265,7 +267,7 @@ def findImgNode(galleryData, callLevel=0):
                           StaleElementReferenceException)
     img = None
 
-    #limit the stack
+    # limit the stack
     if (callLevel > 10):
         return img
 
@@ -276,13 +278,12 @@ def findImgNode(galleryData, callLevel=0):
         # find again
         return findImgNode(galleryData, callLevel + 1)
     except TimeoutException:
-        print ("Time out capturing img on: " + driver.current_url())
-        print (galleryData['galleryURL'])
+        print("Time out capturing img on: " + driver.current_url())
+        print(galleryData['galleryURL'])
         currentUrl = driver.current_url()
-        if ('rl_captcha.php' in currentUrl):
+        if (CAPTCHA_PAGE in currentUrl):
             handleCaptcha()
             img = findImgNode(galleryData, callLevel + 1)
-            
 
     return img
 
@@ -299,14 +300,13 @@ def removePopup():
         pass
 
 
-def handleCaptcha(level = 0):
+def handleCaptcha(level=0):
 
     if (level > 10):
-        print ("captcha", "FAIL")
+        print("captcha", "FAIL")
         raise "Bye"
 
     captchaXpath = '/html/body/div/form/div[1]/div[2]/img'
-
 
     #get_captcha(driver, ele_captcha, "captcha.jpeg")
     #print (ele_captcha)
@@ -342,8 +342,9 @@ def handleCaptcha(level = 0):
         print("input.send_keys(Keys.ENTER)", StaleElementReferenceException)
 """
     current_url = driver.current_url()
-    if ('rl_captcha.php' in current_url):
+    if (CAPTCHA_PAGE in current_url):
         handleCaptcha(level + 1)
+
 
 def get_captcha(driver, element, path):
     # now that we have the preliminary stuff out of the way time to get that image :D
@@ -364,6 +365,6 @@ def get_captcha(driver, element, path):
     image = image.convert('RGB')
     image.save(path, 'jpeg')  # saves new cropped image
 
+
 if __name__ == '__main__':
     main()
-
