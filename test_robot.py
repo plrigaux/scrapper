@@ -18,7 +18,8 @@ class TestStringMethods(unittest.TestCase):
     def test_galleryName(self):
 
         galleries = [('https://www.imagefap.com/pictures/9157754/The-Simpson%27s-Merry-Christmas', "The-Simpson's-Merry-Christmas"),
-                     ('https://www.imagefap.com/pictures/9171882/Nathalie-la-petite-hotesse.-French-comic-%2F-BD', "Nathalie-la-petite-hotesse.-French-comic-/-BD")]
+                     ('https://www.imagefap.com/pictures/9171882/Nathalie-la-petite-hotesse.-French-comic-%2F-BD', "Nathalie-la-petite-hotesse.-French-comic-/-BD"),
+                     ("https://www.imagefap.com/pictures/9242287/La-chatte-beaut%E9?page=0&view=2", "La-chatte-beauté")]
 
         for tuple in galleries:
             cleaned = utilities.getGalleryNameFromURL(tuple[0])

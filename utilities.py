@@ -8,7 +8,7 @@ def getGalleryNameFromURL(gallery) -> str:
     parsed = urlparse.urlparse(gallery)
     name = parsed.path.rsplit('/', 1)[-1]
 
-    name = urlparse.unquote(name)
+    name = urlparse.unquote(name, encoding='iso-8859-1', errors='replace')
 
     return getGalleryName(name)
 

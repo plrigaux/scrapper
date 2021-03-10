@@ -50,7 +50,7 @@ class GalleryData(dict):
     def getNbTotalDownloaded(self, default=-1):
         return super().get("nbTotalDownloaded", default)
 
-    def getGalleryName():
+    def getGalleryName(self):
         return super().get("galleryName", "NO NAME")
 
 # Read YAML file

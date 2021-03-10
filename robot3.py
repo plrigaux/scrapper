@@ -78,8 +78,12 @@ def mainGalleryGrabber2(galleryUrl, galleryData):
     galleryData['galleryName'] = utilities.getGalleryNameFromURL(current_url)
     xpath = '//*[@id="menubar"]/table/tbody/tr[1]/td[2]/table/tbody/tr/td[1]/b[1]/font'
     galleryNameTitle = driver.find_element_by_xpath(xpath)
-    galleryData['galleryName'] = utilities.getGalleryName(
-        galleryNameTitle.text)
+
+    galleryName2 = utilities.getGalleryName(galleryNameTitle.text)
+
+    if (galleryName2):
+        galleryData['galleryName'] = utilities.getGalleryName(galleryNameTitle.text)
+    
     galleryData['galleryURL'] = utilities.getCleanURL(driver.current_url())
     print(galleryData['galleryName'])
 
