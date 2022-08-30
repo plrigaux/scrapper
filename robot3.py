@@ -91,13 +91,12 @@ def mainGalleryGrabber2(galleryUrl, galleryData):
     xpath = '//*[@id="gallery"]/form/table'
     galleryTable = driver.find_element_by_xpath(xpath)
 
-    listId = galleryTable.find_elements_by_xpath(
-        '//table/tbody/tr[2]/td/font[2]/i')
+    listId = galleryTable.find_elements(by=By.XPATH, value='//table/tbody/tr[2]/td/font[2]/i')
 
-    listURL = galleryTable.find_elements_by_xpath('.//table/tbody/tr[1]/td/a')
+    listURL = galleryTable.find_elements(by=By.XPATH, value='.//table/tbody/tr[1]/td/a')
 
     # get Nb of pics base on page info
-    img = galleryTable.find_element_by_xpath('.//table/tbody/tr[1]/td/a/img')
+    img = galleryTable.find_element(by=By.XPATH, value='.//table/tbody/tr[1]/td/a/img')
     alt = img.get_attribute('alt')
     galleryData['nbOfPics'] = utilities.getNumber(alt)
 
@@ -232,7 +231,7 @@ def setUpGallery(gallery, params):
         # you are on photo
         driver.get(gallery)
         # go to the gallery
-        element = driver.find_element_by_xpath(
+        element = driver.find_element("xpath", 
             '//*[@id="main"]/center/table[2]/tbody/tr/td/table/tbody/tr/td/center/div[4]/div[3]/table/tbody/tr[1]/td[2]/a')
 
         galleryLocation = element.get_attribute('href')
@@ -295,7 +294,7 @@ def findImgNode(galleryData, callLevel=0):
 def removePopup():
     xpbtn = '/html/body/div[3]/div/div[1]/div'
     try:
-        popup = driver.find_element_by_xpath(xpbtn)
+        popup = driver.find_element("xpath", xpbtn)
         print("remove the add pop-up")
         popup.click()
     except NoSuchElementException:
@@ -321,7 +320,7 @@ def handleCaptcha(level=0):
     cnv.width = ele.width; cnv.height = ele.height;
     cnv.getContext('2d').drawImage(ele, 0, 0);
     return cnv.toDataURL('image/jpeg').substring(22);    
-    """, driver.driver.find_element_by_xpath(captchaXpath))
+    """, driver.driver.find_element("xpath", captchaXpath))
 
     dirPath = "stuff"
     Path(dirPath).mkdir(parents=True, exist_ok=True)
@@ -335,7 +334,7 @@ def handleCaptcha(level=0):
 
     inputXpath = '//*[@id="captcha"]'
 
-    input = driver.find_element_by_xpath(inputXpath)
+    input = driver.find_element("xpath", inputXpath)
 
     input.send_keys(code)
     time.sleep(2)

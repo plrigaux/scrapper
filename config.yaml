@@ -1,3 +1,4 @@
-outputDirectory: D:/media/xtreamdownloader
+#outputDirectory: D:/media/xtreamdownloader
+outputDirectory: /media/plr/DATA/media/xtreamdownloader
 #browser=firefox
 browser: chrome
