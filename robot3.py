@@ -231,7 +231,7 @@ def setUpGallery(gallery, params):
         # you are on photo
         driver.get(gallery)
         # go to the gallery
-        element = driver.find_element("xpath", 
+        element = driver.find_element_by_xpath(
             '//*[@id="main"]/center/table[2]/tbody/tr/td/table/tbody/tr/td/center/div[4]/div[3]/table/tbody/tr[1]/td[2]/a')
 
         galleryLocation = element.get_attribute('href')
