@@ -9,12 +9,23 @@ from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.common.exceptions import ElementNotInteractableException
 from selenium.webdriver.remote.webelement import WebElement
-
+from selenium.webdriver.chrome.options import Options
 
 class MyDriver():
 
     def __init__(self):
-        self.driver = webdriver.Chrome()
+
+
+        options = Options()
+        options.add_argument("--no-sandbox") #bypass OS security model
+        options.add_argument("--disable-dev-shm-usage") #overcome limited resource problems
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
+
+
+        #self.driver = webdriver.Chrome()
+        self.driver = webdriver.Chrome(options=options)
+
 
         #fFprofile = webdriver.FirefoxProfile()
         # I also tried True, 1 - with and without quotes
