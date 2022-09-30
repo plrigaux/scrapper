@@ -58,7 +58,7 @@ with open("config.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
 
 
-def getOutputDirectory(strPath):
+def getOutputDirectory(strPath = ""):
     strPath = re.sub(r'[<>:"/\|?*]', '_', strPath)
     dirPath = os.path.join(config["outputDirectory"], strPath)
     dirPath = os.path.normpath(dirPath)

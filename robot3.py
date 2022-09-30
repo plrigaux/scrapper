@@ -84,7 +84,12 @@ def mainGalleryGrabber2(galleryUrl, galleryData):
     if (galleryName2):
         galleryData['galleryName'] = utilities.getGalleryName(galleryNameTitle.text)
     
-    galleryData['galleryURL'] = utilities.getCleanURL(driver.current_url())
+    gallery = utilities.getCleanURL(driver.current_url())
+    galleryData['galleryURL'] = gallery
+    os.environ['LAST_GALLERY_URL'] = gallery
+    print ('export LAST_GALLERY_URL={}'.format(gallery))
+    print ("set env ", 'LAST_GALLERY_URL', "to", gallery)
+
     print(galleryData['galleryName'])
 
     # find first picture
@@ -113,6 +118,7 @@ def mainGalleryGrabber2(galleryUrl, galleryData):
 
     thePictureGraber(galleryData)
 
+    del os.environ['LAST_GALLERY_URL']
     print("Download successs!")
 
     driver.quit()

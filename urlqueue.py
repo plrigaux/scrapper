@@ -1,6 +1,8 @@
 
 from tkinter import Tk
 import time
+import os
+
 
 class SourceGetter():
 
@@ -8,15 +10,12 @@ class SourceGetter():
         self.queue = []
         self.last_clipboard = ''
 
-
     def checkUrl(self, url):
-
 
         galleryLink1 = 'www.imagefap.com/gallery.php?gid='
         galleryLink2 = 'www.imagefap.com/pictures/'
         galleryLink3 = 'www.imagefap.com/photo/'
         galleryLink4 = 'www.imagefap.com/gallery/'
-
 
         # check if url looks like a gallery url
         if (url.find(galleryLink1) != -1):
@@ -29,7 +28,6 @@ class SourceGetter():
             return 4  # IF3
         else:
             return 0
-
 
     def pollClipboard(self):
         # retrieve the current clipboard content
@@ -47,7 +45,7 @@ class SourceGetter():
         clip.withdraw()
         clip.clipboard_clear()
         #clip.clipboard_append('i can has clipboardz?')
-        clip.update() # now it stays on the clipboard after the window is closed
+        clip.update()  # now it stays on the clipboard after the window is closed
         clip.destroy()
 
     def checkClipboard(self):
@@ -63,20 +61,32 @@ class SourceGetter():
                 print("OK " + clipboard)
                 self.emptyClipboard()
                 return clipboard
-        
+
         return None
 
     def getFirstValid(self):
+
+        try:
+            url = os.environ['LAST_GALLERY_URL']
+            urltype = self.checkUrl(url)
+            if urltype:
+                print("OK URL FROM ENV" + url)
+                return url
+        
+        except KeyError as exc:
+                print(exc, "env not found")   
+
         print("Copy (Ctrl-c) a valid url ...")
         while True:
-                ### fetch clipboard content and check for new url; add to queue if valid url is detected
+            # fetch clipboard content and check for new url; add to queue if valid url is detected
             if url := self.checkClipboard():
                 return url
-                    
-                ### check if queue contains a url
+
+                # check if queue contains a url
                 #if len(urlqueue.queue): gallery.DownloadGallery()
-                    
+
             time.sleep(0.5)
+
 
 if __name__ == "__main__":
     sg = SourceGetter()
