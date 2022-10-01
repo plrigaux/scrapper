@@ -24,6 +24,7 @@ from PIL import Image
 from pathlib import Path
 import captcha
 import time
+import tracker
 
 driver = None
 CAPTCHA_PAGE = 'rl_captcha.php'
@@ -42,21 +43,31 @@ def main():
 
 
 def mainGalleryGrabber(galleryUrl):
+    
     galleryData = configData.GalleryData()
     try:
         mainGalleryGrabber2(galleryUrl, galleryData)
     finally:
 
-        if 'galleryName' in galleryData:
+        if galleryData.has_key('galleryName' ):
             dirName = configData.createAndGetOutputDirectory(
-                galleryData.getGalleryName())
+                galleryData.galleryName)
             configData.dumpData(galleryData, dirName)
-            print("Gallery directory: " + dirName)
+        
+        tracker.failed(galleryData)
 
-        print("Gallery url: " + galleryData.getGalleryURL())
+        print()
+        print()
+        print()
+        print("Gallery directory: " , dirName)
+        print("Gallery url: ", galleryData.galleryURL)
+        print("Gallery name: ", galleryData.galleryName)
+        print()
+        print()
+        print()
 
 
-def mainGalleryGrabber2(galleryUrl, galleryData):
+def mainGalleryGrabber2(galleryUrl, galleryData : configData.GalleryData):
     print(galleryUrl)
 
     # exit()
@@ -75,22 +86,20 @@ def mainGalleryGrabber2(galleryUrl, galleryData):
         handleCaptcha()
 
     print('---------------------------------------------------------')
-    galleryData['galleryName'] = utilities.getGalleryNameFromURL(current_url)
+    galleryData.galleryName = utilities.getGalleryNameFromURL(current_url)
     xpath = '//*[@id="menubar"]/table/tbody/tr[1]/td[2]/table/tbody/tr/td[1]/b[1]/font'
     galleryNameTitle = driver.find_element_by_xpath(xpath)
 
     galleryName2 = utilities.getGalleryName(galleryNameTitle.text)
-
+    
     if (galleryName2):
         galleryData['galleryName'] = utilities.getGalleryName(galleryNameTitle.text)
     
-    gallery = utilities.getCleanURL(driver.current_url())
-    galleryData['galleryURL'] = gallery
-    os.environ['LAST_GALLERY_URL'] = gallery
-    print ('export LAST_GALLERY_URL={}'.format(gallery))
-    print ("set env ", 'LAST_GALLERY_URL', "to", gallery)
-
-    print(galleryData['galleryName'])
+    gallery_url = utilities.getCleanURL(driver.current_url())
+    galleryData.galleryURL = gallery_url
+    
+    
+    print(galleryData.galleryName)
 
     # find first picture
     xpath = '//*[@id="gallery"]/form/table'
@@ -103,7 +112,8 @@ def mainGalleryGrabber2(galleryUrl, galleryData):
     # get Nb of pics base on page info
     img = galleryTable.find_element(by=By.XPATH, value='.//table/tbody/tr[1]/td/a/img')
     alt = img.get_attribute('alt')
-    galleryData['nbOfPics'] = utilities.getNumber(alt)
+    galleryData.nbOfPics = utilities.getNumber(alt)
+    tracker.save_a_process_gallery(galleryData)
 
     listOfPics = []
     for i, item in enumerate(listId):
@@ -111,15 +121,16 @@ def mainGalleryGrabber2(galleryUrl, galleryData):
         pic = Picture(i, href, item.text, 'new')
         listOfPics.append(pic)
 
-    galleryData['listOfPics'] = listOfPics
+    galleryData.listOfPics = listOfPics
 
     print("read: {} found: {}".format(
-        galleryData['nbOfPics'], len(galleryData['listOfPics'])))
+        galleryData.nbOfPics, len(galleryData.listOfPics)))
 
     thePictureGraber(galleryData)
 
-    del os.environ['LAST_GALLERY_URL']
+    
     print("Download successs!")
+    tracker.success(galleryData)
 
     driver.quit()
 
@@ -127,22 +138,23 @@ def mainGalleryGrabber2(galleryUrl, galleryData):
 def thePictureGraber(galleryData):
 
     dirName = configData.createAndGetOutputDirectory(
-        galleryData['galleryName'])
+        galleryData.galleryName)
     print("Output dir: " + dirName)
     currentDalleryData = configData.getCurrentData(dirName)
 
     if currentDalleryData:
-        galleryData['listOfPics'] = currentDalleryData['listOfPics']
+        galleryData.listOfPics = currentDalleryData.listOfPics
     else:
-        galleryData['nbBatchDownloaded'] = 0
-        galleryData['nbTotalDownloaded'] = 0
+        galleryData.nbBatchDownloaded = 0
+        galleryData.nbTotalDownloaded = 0
         configData.dumpData(galleryData, dirName)
 
-    listOfPics = galleryData['listOfPics']
+    listOfPics = galleryData.listOfPics
     galleryDataLenght = len(listOfPics)
     nbBatchDownloaded = 0
     nbTotalDownloaded = 0
 
+    print("Going to dowload a gallery of '{}' items".format(galleryDataLenght))
     # TODO not download option
 
     # TODO handle https://www.imagefap.com/rl_captcha.php
