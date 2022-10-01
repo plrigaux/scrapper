@@ -3,6 +3,8 @@ from tkinter import Tk
 import time
 import os
 
+import tracker 
+
 
 class SourceGetter():
 
@@ -67,14 +69,16 @@ class SourceGetter():
     def getFirstValid(self):
 
         try:
-            url = os.environ['LAST_GALLERY_URL']
+            url = tracker.getFirstFailed()
+
             urltype = self.checkUrl(url)
             if urltype:
-                print("OK URL FROM ENV" + url)
+                print("OK URL FROM TRAKET" , url)
                 return url
         
-        except KeyError as exc:
-                print(exc, "env not found")   
+        except Exception as exc:
+            print("Tracker not working") 
+            print(exc)   
 
         print("Copy (Ctrl-c) a valid url ...")
         while True:

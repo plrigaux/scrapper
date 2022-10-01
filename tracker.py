@@ -1,4 +1,5 @@
 from nturl2path import url2pathname
+from typing import Dict
 from unicodedata import name
 import yaml
 import configData
@@ -8,6 +9,7 @@ import datetime
 import configData
 
 TRACKER_FILE_NAME = "tracker.yaml"
+FAILED = "FAILED"
 
 galleries = {}
 
@@ -84,13 +86,16 @@ def save_a_process(galleryName: str, galleryUrl: str, nbOfPics: int, nbTotalDown
     galleries[proc.url] = proc
     save()
 
+
 def failed(galleryData: configData.GalleryData):
-    save_a_process_gallery(galleryData, status="FAILED")
+    save_a_process_gallery(galleryData, status=FAILED)
+
 
 def success(galleryData: configData.GalleryData):
-    #remove the tracking of sussessfull
+    # remove the tracking of sussessfull
     galleries.pop(galleryData.galleryURL, None)
     save()
+
 
 def save():
 
@@ -98,10 +103,21 @@ def save():
     for gal in galleries.values():
         data.append(dict(gal.__dict__))
 
-    data.sort(key=lambda x: x['date'])
+    data.sort(key=lambda x: x['date'], reverse=True)
 
     with open(tracker_file, mode="wt", encoding="utf-8") as file:
         yaml.dump(data, file, default_flow_style=False, sort_keys=False)
+
+
+def getFirstFailed() -> str:
+    load()
+
+    for track in [*galleries.values()]:
+        if track.status == FAILED:
+            return track.url
+
+    return None
+
 
 def load():
     with open(tracker_file, 'r') as stream:
@@ -114,11 +130,11 @@ def load():
         data2.append(t)
 
     print(data2)
-    data = data2
-    data.sort(key=lambda x: x.date)
-    galleries = {i.url: data for i in data}
-    print("str", str(data[0]))
-    print(data)
+
+    data2.sort(key=lambda x: x.date, reverse=True)
+    global galleries
+    galleries = {i.url: i for i in data2}
+
     print(galleries)
 
 
