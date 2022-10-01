@@ -83,6 +83,7 @@ def save_a_process(galleryName: str, galleryUrl: str, nbOfPics: int, nbTotalDown
     date = datetime.datetime.now().replace(microsecond=0).isoformat()
     proc = TrackedGallery(name=galleryName, url=galleryUrl,
                           date=date, nbOfPics=nbOfPics, nbTotalDownloaded=nbTotalDownloaded, status=status)
+    load()
     galleries[proc.url] = proc
     save()
 
@@ -92,19 +93,26 @@ def failed(galleryData: configData.GalleryData):
 
 
 def success(galleryData: configData.GalleryData):
+    global galleries
+    galleryData.status = "SUCCESS"
+    load()
     # remove the tracking of sussessfull
+    print("gal size b", len(galleries), galleries)
     galleries.pop(galleryData.galleryURL, None)
+    print("gal size a", len(galleries), galleries)
     save()
 
 
 def save():
-
+    global galleries
     data = []
     for gal in galleries.values():
         data.append(dict(gal.__dict__))
 
     data.sort(key=lambda x: x['date'], reverse=True)
 
+    print("save data", len(data), "gal len", len(galleries))
+    print("save data", data)
     with open(tracker_file, mode="wt", encoding="utf-8") as file:
         yaml.dump(data, file, default_flow_style=False, sort_keys=False)
 
@@ -120,6 +128,7 @@ def getFirstFailed() -> str:
 
 
 def load():
+    global galleries
     with open(tracker_file, 'r') as stream:
         data = yaml.load(stream, Loader=yaml.Loader)
 
@@ -132,7 +141,7 @@ def load():
     print(data2)
 
     data2.sort(key=lambda x: x.date, reverse=True)
-    global galleries
+
     galleries = {i.url: i for i in data2}
 
     print(galleries)

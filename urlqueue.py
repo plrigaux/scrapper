@@ -66,19 +66,20 @@ class SourceGetter():
 
         return None
 
-    def getFirstValid(self):
+    def getFirstValid(self, use_tracker=True):
 
-        try:
-            url = tracker.getFirstFailed()
+        if use_tracker:
+            try:
+                url = tracker.getFirstFailed()
 
-            urltype = self.checkUrl(url)
-            if urltype:
-                print("OK URL FROM TRAKET" , url)
-                return url
-        
-        except Exception as exc:
-            print("Tracker not working") 
-            print(exc)   
+                urltype = self.checkUrl(url)
+                if urltype:
+                    print("OK URL FROM TRAKER" , url)
+                    return url
+            
+            except Exception as exc:
+                print("Tracker not working") 
+                print(exc)   
 
         print("Copy (Ctrl-c) a valid url ...")
         while True:

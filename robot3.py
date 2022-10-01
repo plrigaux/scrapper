@@ -25,6 +25,7 @@ from pathlib import Path
 import captcha
 import time
 import tracker
+import argparse
 
 driver = None
 CAPTCHA_PAGE = 'rl_captcha.php'
@@ -35,9 +36,22 @@ params = {'page': '0', 'view': '2'}
 
 
 def main():
+
+    parser = argparse.ArgumentParser(description="Robot scraper",
+                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-t", "--notrack", action="store_true", help="don't read tack file")
+  
+    args = parser.parse_args()
+    cli_config = vars(args)
+    print(cli_config)
+
     sg = urlqueue.SourceGetter()
 
-    gallery = sg.getFirstValid()
+    use_tracker = True
+    if cli_config['notrack']:
+        use_tracker = False
+
+    gallery = sg.getFirstValid(use_tracker=use_tracker)
 
     mainGalleryGrabber(gallery)
 
@@ -54,11 +68,12 @@ def mainGalleryGrabber(galleryUrl):
                 galleryData.galleryName)
             configData.dumpData(galleryData, dirName)
         
-        tracker.failed(galleryData)
+        if galleryData.nbOfPics != galleryData.nbTotalDownloaded:
+            tracker.failed(galleryData)
 
         print()
         print()
-        print()
+        print("--------- END ----------")
         print("Gallery directory: " , dirName)
         print("Gallery url: ", galleryData.galleryURL)
         print("Gallery name: ", galleryData.galleryName)
