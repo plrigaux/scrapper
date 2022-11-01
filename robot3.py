@@ -68,8 +68,10 @@ def mainGalleryGrabber(galleryUrl):
                 galleryData.galleryName)
             configData.dumpData(galleryData, dirName)
         
+        status = "SUCCESS"
         if galleryData.nbOfPics != galleryData.nbTotalDownloaded:
             tracker.failed(galleryData)
+            status = tracker.FAILED
 
         print()
         print()
@@ -77,7 +79,9 @@ def mainGalleryGrabber(galleryUrl):
         print("Gallery directory: " , dirName)
         print("Gallery url: ", galleryData.galleryURL)
         print("Gallery name: ", galleryData.galleryName)
-        print()
+        print("Gallery number of files: ", galleryData.nbOfPics)
+        print("Gallery file dowloaded: ", galleryData.nbTotalDownloaded)
+        print(status)
         print()
         print()
 

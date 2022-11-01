@@ -10,6 +10,7 @@ import configData
 
 TRACKER_FILE_NAME = "tracker.yaml"
 FAILED = "FAILED"
+IN_PROGRESS = "IN_PROGRESS"
 
 galleries = {}
 
@@ -35,8 +36,10 @@ class TrackedGallery():
     def url(self):
         return self.__dict__["url"]
 
-    def __str__(self):
-        print("test __str__")
+    def __str__(self) -> str:
+        return __repr__()
+    
+    def __repr__(self) -> str:
         return str(self.__dict__)
 
     def __setattr__(self, name, value):
@@ -78,7 +81,7 @@ def save_a_process_gallery(gallery: configData.GalleryData, status="In process")
                    gallery.nbOfPics, gallery.nbTotalDownloaded, status)
 
 
-def save_a_process(galleryName: str, galleryUrl: str, nbOfPics: int, nbTotalDownloaded: int, status="In process") -> None:
+def save_a_process(galleryName: str, galleryUrl: str, nbOfPics: int, nbTotalDownloaded: int, status=IN_PROGRESS) -> None:
 
     date = datetime.datetime.now().replace(microsecond=0).isoformat()
     proc = TrackedGallery(name=galleryName, url=galleryUrl,
@@ -138,19 +141,23 @@ def load():
         t = TrackedGallery(**tr)
         data2.append(t)
 
-    print(data2)
+    #print(data2)
 
     data2.sort(key=lambda x: x.date, reverse=True)
 
     galleries = {i.url: i for i in data2}
 
-    print(galleries)
+    #print(galleries)
 
 
 outDir = configData.getOutputDirectory()
 tracker_file = os.path.join(outDir, TRACKER_FILE_NAME)
 tracker_file_path = Path(tracker_file)
 tracker_file_path.touch(exist_ok=True)
+
+def displayTraker():
+    load()
+    print(yaml.dump(galleries, default_flow_style=False))
 
 
 def main():
@@ -184,6 +191,4 @@ def main():
 
 if __name__ == '__main__':
     # main()
-    save_a_process("Allo", "toi")
-    save_a_process("Pizza", "getty")
-    load()
+    displayTraker()
