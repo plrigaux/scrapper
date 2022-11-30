@@ -6,26 +6,29 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
-from selenium.common.exceptions import ElementClickInterceptedException
-from selenium.common.exceptions import ElementNotInteractableException
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.chrome.options import Options
+
+driver_location = '/usr/bin/chromedriver'
+binary_location = '/usr/bin/google-chrome'
+
 
 class MyDriver():
 
     def __init__(self):
 
-
         options = Options()
-        options.add_argument("--no-sandbox") #bypass OS security model
-        options.add_argument("--disable-dev-shm-usage") #overcome limited resource problems
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_argument("--no-sandbox")  # bypass OS security model
+        # overcome limited resource problems
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_experimental_option(
+            "excludeSwitches", ["enable-automation"])
         options.add_experimental_option('useAutomationExtension', False)
-
+        options.binary_location = binary_location
 
         #self.driver = webdriver.Chrome()
-        self.driver = webdriver.Chrome(options=options)
-
+        self.driver = webdriver.Chrome(
+            executable_path=driver_location, options=options)
 
         #fFprofile = webdriver.FirefoxProfile()
         # I also tried True, 1 - with and without quotes

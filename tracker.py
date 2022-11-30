@@ -7,6 +7,7 @@ from pathlib import Path
 import os
 import datetime
 import configData
+from pprint import pprint
 
 TRACKER_FILE_NAME = "tracker.yaml"
 FAILED = "FAILED"
@@ -100,9 +101,12 @@ def success(galleryData: configData.GalleryData):
     galleryData.status = "SUCCESS"
     load()
     # remove the tracking of sussessfull
-    print("gal size b", len(galleries), galleries)
+    print("Gallery size B {}".format(len(galleries)))
+    pprint(galleries)
     galleries.pop(galleryData.galleryURL, None)
-    print("gal size a", len(galleries), galleries)
+    print("Gallery size A {}".format(len(galleries)))
+    pprint(galleries, depth=3)
+
     save()
 
 
@@ -114,8 +118,9 @@ def save():
 
     data.sort(key=lambda x: x['date'], reverse=True)
 
-    print("save data", len(data), "gal len", len(galleries))
+    print("save data", len(data), "gallery lenght", len(galleries))
     print("save data", data)
+
     with open(tracker_file, mode="wt", encoding="utf-8") as file:
         yaml.dump(data, file, default_flow_style=False, sort_keys=False)
 
@@ -134,6 +139,10 @@ def load():
     global galleries
     with open(tracker_file, 'r') as stream:
         data = yaml.load(stream, Loader=yaml.Loader)
+
+    if data is None:
+        print("No tracker loaded!", "Location: ", tracker_file)
+        return
 
     data2 = []
 

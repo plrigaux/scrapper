@@ -72,10 +72,13 @@ class SourceGetter():
             try:
                 url = tracker.getFirstFailed()
 
-                urltype = self.checkUrl(url)
-                if urltype:
-                    print("OK URL FROM TRAKER" , url)
-                    return url
+                if url is not None:
+                    urltype = self.checkUrl(url)
+                    if urltype:
+                        print("OK URL FROM TRAKER" , url)
+                        return url
+                else :
+                    print ("No url returned from tracker.")
             
             except Exception as exc:
                 print("Tracker not working") 

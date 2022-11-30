@@ -26,6 +26,7 @@ import captcha
 import time
 import tracker
 import argparse
+from pprint import pprint
 
 driver = None
 CAPTCHA_PAGE = 'rl_captcha.php'
@@ -38,9 +39,10 @@ params = {'page': '0', 'view': '2'}
 def main():
 
     parser = argparse.ArgumentParser(description="Robot scraper",
-                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-t", "--notrack", action="store_true", help="don't read tack file")
-  
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-t", "--notrack", action="store_true",
+                        help="don't read tack file")
+
     args = parser.parse_args()
     cli_config = vars(args)
     print(cli_config)
@@ -49,6 +51,7 @@ def main():
 
     use_tracker = True
     if cli_config['notrack']:
+        print("Don't use tracker")
         use_tracker = False
 
     gallery = sg.getFirstValid(use_tracker=use_tracker)
@@ -57,17 +60,19 @@ def main():
 
 
 def mainGalleryGrabber(galleryUrl):
-    
+
     galleryData = configData.GalleryData()
+    dirName = "Not defined"
+    
     try:
         mainGalleryGrabber2(galleryUrl, galleryData)
     finally:
 
-        if galleryData.has_key('galleryName' ):
+        if galleryData.has_key('galleryName'):
             dirName = configData.createAndGetOutputDirectory(
                 galleryData.galleryName)
             configData.dumpData(galleryData, dirName)
-        
+
         status = "SUCCESS"
         if galleryData.nbOfPics != galleryData.nbTotalDownloaded:
             tracker.failed(galleryData)
@@ -76,7 +81,7 @@ def mainGalleryGrabber(galleryUrl):
         print()
         print()
         print("--------- END ----------")
-        print("Gallery directory: " , dirName)
+        print("Gallery directory: ", dirName)
         print("Gallery url: ", galleryData.galleryURL)
         print("Gallery name: ", galleryData.galleryName)
         print("Gallery number of files: ", galleryData.nbOfPics)
@@ -86,7 +91,7 @@ def mainGalleryGrabber(galleryUrl):
         print()
 
 
-def mainGalleryGrabber2(galleryUrl, galleryData : configData.GalleryData):
+def mainGalleryGrabber2(galleryUrl, galleryData: configData.GalleryData):
     print(galleryUrl)
 
     # exit()
@@ -110,26 +115,29 @@ def mainGalleryGrabber2(galleryUrl, galleryData : configData.GalleryData):
     galleryNameTitle = driver.find_element_by_xpath(xpath)
 
     galleryName2 = utilities.getGalleryName(galleryNameTitle.text)
-    
+
     if (galleryName2):
-        galleryData['galleryName'] = utilities.getGalleryName(galleryNameTitle.text)
-    
+        galleryData['galleryName'] = utilities.getGalleryName(
+            galleryNameTitle.text)
+
     gallery_url = utilities.getCleanURL(driver.current_url())
     galleryData.galleryURL = gallery_url
-    
-    
+
     print(galleryData.galleryName)
 
     # find first picture
     xpath = '//*[@id="gallery"]/form/table'
     galleryTable = driver.find_element_by_xpath(xpath)
 
-    listId = galleryTable.find_elements(by=By.XPATH, value='//table/tbody/tr[2]/td/font[2]/i')
+    listId = galleryTable.find_elements(
+        by=By.XPATH, value='//table/tbody/tr[2]/td/font[2]/i')
 
-    listURL = galleryTable.find_elements(by=By.XPATH, value='.//table/tbody/tr[1]/td/a')
+    listURL = galleryTable.find_elements(
+        by=By.XPATH, value='.//table/tbody/tr[1]/td/a')
 
     # get Nb of pics base on page info
-    img = galleryTable.find_element(by=By.XPATH, value='.//table/tbody/tr[1]/td/a/img')
+    img = galleryTable.find_element(
+        by=By.XPATH, value='.//table/tbody/tr[1]/td/a/img')
     alt = img.get_attribute('alt')
     galleryData.nbOfPics = utilities.getNumber(alt)
     tracker.save_a_process_gallery(galleryData)
@@ -145,9 +153,10 @@ def mainGalleryGrabber2(galleryUrl, galleryData : configData.GalleryData):
     print("read: {} found: {}".format(
         galleryData.nbOfPics, len(galleryData.listOfPics)))
 
+    pprint(galleryData.listOfPics, depth=3)
+
     thePictureGraber(galleryData)
 
-    
     print("Download successs!")
     tracker.success(galleryData)
 
@@ -161,8 +170,9 @@ def thePictureGraber(galleryData):
     print("Output dir: " + dirName)
     currentDalleryData = configData.getCurrentData(dirName)
 
-    if currentDalleryData:
+    if currentDalleryData and len(currentDalleryData.listOfPics) > 0:      
         galleryData.listOfPics = currentDalleryData.listOfPics
+
     else:
         galleryData.nbBatchDownloaded = 0
         galleryData.nbTotalDownloaded = 0
