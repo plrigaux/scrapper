@@ -10,6 +10,7 @@ from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.common.exceptions import ElementNotInteractableException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.remote.webelement import WebElement
 
 import re
 from urllib.request import proxy_bypass, urlopen
@@ -63,7 +64,7 @@ def mainGalleryGrabber(galleryUrl):
 
     galleryData = configData.GalleryData()
     dirName = "Not defined"
-    
+
     try:
         mainGalleryGrabber2(galleryUrl, galleryData)
     finally:
@@ -95,7 +96,7 @@ def mainGalleryGrabber2(galleryUrl, galleryData: configData.GalleryData):
     print(galleryUrl)
 
     # exit()
-    global driver
+    global driver 
     driver = MyDriver()
 
     #gallery = config['DEFAULT']['gallery']
@@ -310,7 +311,7 @@ def findOriginalFileName(galleryFileName, pageTitle) -> str:
     return fileName
 
 
-def findImgNode(galleryData, callLevel=0):
+def findImgNode(galleryData, callLevel=0) -> WebElement | None:
     imgpath = '//*[@id="slideshow"]/center/div[1]/span/img'
     #imgpath = '/html/body/center/table[2]/tbody/tr/td[1]/table/tbody/tr/td[1]/div/center/table[2]/tbody/tr/td/table/tbody/tr/td/center/table/tbody/tr/td/div[5]/center/div[1]/span/img'
     ignored_exceptions = (NoSuchElementException,
@@ -322,7 +323,7 @@ def findImgNode(galleryData, callLevel=0):
         return img
 
     try:
-        img = WebDriverWait(driver.driver, 5, ignored_exceptions=ignored_exceptions)\
+        img : WebElement = WebDriverWait(driver.driver, 5, ignored_exceptions=ignored_exceptions)\
             .until(expected_conditions.presence_of_element_located((By.XPATH, imgpath)))
     except StaleElementReferenceException:
         # find again
@@ -336,7 +337,26 @@ def findImgNode(galleryData, callLevel=0):
             img = findImgNode(galleryData, callLevel + 1)
 
     return img
+    
+"""
+def contextMenuClick(element : WebElement):
+    evt = element.ownerDocument.createEvent('MouseEvents')
 
+    RIGHT_CLICK_BUTTON_CODE = 2; # the same for FF and IE
+
+    evt.initMouseEvent('contextmenu', True, True,
+         element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false,
+         false, false, false, RIGHT_CLICK_BUTTON_CODE, None)
+
+    if element.ownerDocument.createEventObject:
+        # dispatch for IE
+       return element.fireEvent('onclick', evt)
+    
+    else:
+    # dispatch for firefox + others
+      return !element.dispatchEvent(evt)
+    
+"""
 
 def removePopup():
     xpbtn = '/html/body/div[3]/div/div[1]/div'
