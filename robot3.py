@@ -171,13 +171,24 @@ def thePictureGraber(galleryData):
     print("Output dir: " + dirName)
     currentDalleryData = configData.getCurrentData(dirName)
 
-    if currentDalleryData and len(currentDalleryData.listOfPics) > 0:      
-        galleryData.listOfPics = currentDalleryData.listOfPics
-
+    if currentDalleryData and len(currentDalleryData.listOfPics) > 0:  
+        if len(galleryData.listOfPics) == len(currentDalleryData.listOfPics):
+            galleryData.listOfPics = currentDalleryData.listOfPics
+        elif len(galleryData.listOfPics) >= len(currentDalleryData.listOfPics):
+            for key in galleryData.listOfPics:
+                galleryData.listOfPics[key] = currentDalleryData.listOfPics[key]
+            
+            galleryData.nbBatchDownloaded = 0
+            galleryData.nbTotalDownloaded = 0
+        else:
+            galleryData.nbBatchDownloaded = 0
+            galleryData.nbTotalDownloaded = 0
+            configData.dumpData(galleryData, dirName)
     else:
         galleryData.nbBatchDownloaded = 0
         galleryData.nbTotalDownloaded = 0
         configData.dumpData(galleryData, dirName)
+
 
     listOfPics = galleryData.listOfPics
     galleryDataLenght = len(listOfPics)

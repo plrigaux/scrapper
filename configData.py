@@ -68,10 +68,14 @@ class GalleryData(dict):
     def listOfPics(self) -> list:
         return super().get("listOfPics", [])
 
-
-# Read YAML file
-with open("config.yaml", 'r') as stream:
-    config = yaml.safe_load(stream)
+try :
+    # Read YAML file
+    with open("config.yaml", 'r') as stream:
+        config = yaml.safe_load(stream)
+except:
+    # Read YAML file
+    with open("../config.yaml", 'r') as stream:
+        config = yaml.safe_load(stream)
 
 
 def getOutputDirectory(strPath=""):
