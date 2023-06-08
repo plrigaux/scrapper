@@ -91,27 +91,47 @@ def mainGalleryGrabber(galleryUrl):
         print()
         print()
 
+def acquirePictures(galleryUrl, galleryData: configData.GalleryData) -> list:
+    cleanGalleryUrl = setUpGallery(galleryUrl, params)
+    driver.get(cleanGalleryUrl)
 
-def mainGalleryGrabber2(galleryUrl, galleryData: configData.GalleryData):
-    print(galleryUrl)
+    print(cleanGalleryUrl)
 
-    # exit()
-    global driver 
-    driver = MyDriver()
-
-    #gallery = config['DEFAULT']['gallery']
-
-    cleanUrl = setUpGallery(galleryUrl, params)
-    print(cleanUrl)
-
-    current_url = driver.current_url()
-    print(type(current_url))
-    print(current_url)
-    if (CAPTCHA_PAGE in current_url):
+    if (CAPTCHA_PAGE in cleanGalleryUrl):
         handleCaptcha()
 
     print('---------------------------------------------------------')
-    galleryData.galleryName = utilities.getGalleryNameFromURL(current_url)
+    print("check pager")
+    xpath = '//*[@id="gallery"]//span/a[@class]'
+    pageger = driver.basic_find_elements_by_xpath(xpath)
+    print("pager len", len(pageger))
+    
+    pages = {}
+    pages[0] = cleanGalleryUrl
+    for i, pagelink in enumerate(pageger) :
+        href = pagelink.get_attribute('href') 
+        text =   pagelink.text     
+        print("a text href", pagelink.text, href)
+
+        if text.isnumeric():    
+            pages[int(text)] = href
+
+    pprint(pages)
+
+    listOfPics = []
+    for key, gallery_url in pages.items():
+        acquirePictures_per_page(gallery_url, galleryData, listOfPics, True)
+
+    return listOfPics
+
+def acquirePictures_per_page(galleryUrl, galleryData: configData.GalleryData, listOfPics :list, load_page :bool):
+
+    if load_page:
+        cleanGalleryUrl = setUpGallery(galleryUrl, params)
+        driver.get(galleryUrl)
+
+    print('---------------------------------------------------------')
+    galleryData.galleryName = utilities.getGalleryNameFromURL(galleryUrl)
     xpath = '//*[@id="menubar"]/table/tbody/tr[1]/td[2]/table/tbody/tr/td[1]/b[1]/font'
     galleryNameTitle = driver.find_element_by_xpath(xpath)
 
@@ -141,20 +161,43 @@ def mainGalleryGrabber2(galleryUrl, galleryData: configData.GalleryData):
         by=By.XPATH, value='.//table/tbody/tr[1]/td/a/img')
     alt = img.get_attribute('alt')
     galleryData.nbOfPics = utilities.getNumber(alt)
-    tracker.save_a_process_gallery(galleryData)
 
-    listOfPics = []
+  
+    cur_index = len(listOfPics)
     for i, item in enumerate(listId):
         href = listURL[i].get_attribute('href')
-        pic = Picture(i, href, item.text, 'new')
+        pic = Picture(i + cur_index, href, item.text, 'new')
         listOfPics.append(pic)
 
-    galleryData.listOfPics = listOfPics
+    print("listOfPics", len(listOfPics))
 
-    print("read: {} found: {}".format(
-        galleryData.nbOfPics, len(galleryData.listOfPics)))
 
-    pprint(galleryData.listOfPics, depth=3)
+def mainGalleryGrabber2(galleryUrl, galleryData: configData.GalleryData):
+    print(galleryUrl)
+    print("Stuff")
+    pprint(galleryData)
+
+    global driver 
+    driver = MyDriver()
+
+    print("Load the list")
+    #LOAD_AGAIN = True
+    LOAD_AGAIN = False
+
+    if len(galleryData.listOfPics) > 0 and not LOAD_AGAIN:
+          print("Don't get pictures list")
+          pass
+    else:     
+        listOfPics = acquirePictures(galleryUrl, galleryData)
+      
+        configData.updateList(galleryData, listOfPics)
+
+        tracker.save_a_process_gallery(galleryData)
+
+        print("read: {} found: {}".format(
+            galleryData.nbOfPics, len(galleryData.listOfPics)))
+
+        pprint(galleryData.listOfPics, depth=3)
 
     thePictureGraber(galleryData)
 
@@ -169,14 +212,14 @@ def thePictureGraber(galleryData):
     dirName = configData.createAndGetOutputDirectory(
         galleryData.galleryName)
     print("Output dir: " + dirName)
-    currentDalleryData = configData.getCurrentData(dirName)
+    currentGalleryData = configData.getCurrentData(dirName)
 
-    if currentDalleryData and len(currentDalleryData.listOfPics) > 0:  
-        if len(galleryData.listOfPics) == len(currentDalleryData.listOfPics):
-            galleryData.listOfPics = currentDalleryData.listOfPics
-        elif len(galleryData.listOfPics) >= len(currentDalleryData.listOfPics):
-            for key in galleryData.listOfPics:
-                galleryData.listOfPics[key] = currentDalleryData.listOfPics[key]
+    if currentGalleryData and len(currentGalleryData.listOfPics) > 0:  
+        if len(galleryData.listOfPics) == len(currentGalleryData.listOfPics):
+            galleryData.listOfPics = currentGalleryData.listOfPics
+        elif len(galleryData.listOfPics) >= len(currentGalleryData.listOfPics):
+            for picture in galleryData.listOfPics:
+                galleryData.listOfPics[picture.index] = currentGalleryData.listOfPics[picture.index]
             
             galleryData.nbBatchDownloaded = 0
             galleryData.nbTotalDownloaded = 0
@@ -206,30 +249,32 @@ def thePictureGraber(galleryData):
         if (picture.status == 'new'):
             print("Downloading {} of {} ...".format(i, galleryDataLenght))
 
+            #open page
             driver.get(picture.href)
 
             img = findImgNode(galleryData)
-            src = img.get_attribute('src')
-            picture.imgSrc = src
-            print("image: {}".format(src))
+            if img is not None:
+                src = img.get_attribute('src')
+                picture.imgSrc = src
+                print("image: {}".format(src))
 
-            parsedSrc = urlparse.urlparse(src)
-            picture.extention = parsedSrc.path.rsplit('.', 1)[-1]
+                parsedSrc = urlparse.urlparse(src)
+                picture.extention = parsedSrc.path.rsplit('.', 1)[-1]
 
-            picture.fileName = findOriginalFileName(
-                picture.fileName, driver.title())
+                picture.fileName = findOriginalFileName(
+                    picture.fileName, driver.title())
 
-            file_name = os.path.join(dirName, picture.fileName)
+                file_name = os.path.join(dirName, picture.fileName)
 
-            if (downloadImage1(src, file_name) == True):
-                #downloadImage2(img, file_name)
+                if (downloadImage1(src, file_name) == True):
+                    #downloadImage2(img, file_name)
 
-                picture.status = 'downloaded'
-                nbBatchDownloaded = nbBatchDownloaded + 1
-                galleryData['nbBatchDownloaded'] = nbBatchDownloaded
-                nbTotalDownloaded = nbTotalDownloaded + 1
-            else:
-                picture.status = 'failed'
+                    picture.status = 'downloaded'
+                    nbBatchDownloaded = nbBatchDownloaded + 1
+                    galleryData['nbBatchDownloaded'] = nbBatchDownloaded
+                    nbTotalDownloaded = nbTotalDownloaded + 1
+                else:
+                    picture.status = 'failed'
 
         else:
             print("Pass {} of {}".format(i, galleryDataLenght))
@@ -242,8 +287,12 @@ def thePictureGraber(galleryData):
 
 def downloadImage1(src, file_name):
     try:
-        resource = urlopen(src)
+        print("download image")
+        resource = urlopen(src, timeout=10)
 
+        if resource is None:
+            return False
+        
         with open(file_name, "wb") as output:
             output.write(resource.read())
             output.close()
@@ -280,12 +329,13 @@ def downloadImage2(img, file_name):
         f.write(base64.b64decode(img_base64))
 
 
-def setUpGallery(gallery, params):
-
+def setUpGallery(gallery, params) -> str:
+    print("setUpGallery")
     cleanUrl = utilities.getGalleryNameFromURL(gallery)
 
     m = re.search(r'/photo/(\d+)/', gallery)
 
+    url = None
     if m:
         # you are on photo
         driver.get(gallery)
@@ -295,19 +345,14 @@ def setUpGallery(gallery, params):
 
         galleryLocation = element.get_attribute('href')
 
-        galleryLocation = setUpGallery(galleryLocation, params)
-        print("galleryLocation " + galleryLocation)
-
-        driver.get(galleryLocation)
-        gallery = driver.current_url
+        url = setUpGallery(galleryLocation, params)
+        
     else:
         # you are on the gallery
         #cleanUrl = gallery.rsplit('?', 1)[0]
-        cleanUrl = utilities.urlSetParams(gallery, params)
-        driver.get(cleanUrl)
-
-    url = driver.current_url()
-    print(url)
+        url = utilities.urlSetParams(gallery, params)
+        
+    print("galleryLocation:" , url)
 
     return url
 
@@ -338,6 +383,7 @@ def findImgNode(galleryData, callLevel=0) -> WebElement | None:
             .until(expected_conditions.presence_of_element_located((By.XPATH, imgpath)))
     except StaleElementReferenceException:
         # find again
+        print("Find again img")
         return findImgNode(galleryData, callLevel + 1)
     except TimeoutException:
         print("Time out capturing img on: " + driver.current_url())

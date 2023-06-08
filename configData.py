@@ -5,6 +5,7 @@ import collections
 from pathlib import Path
 import picture
 import pprint
+from picture import Picture
 
 dataYaml = '!data.yaml'
 
@@ -93,12 +94,17 @@ def createAndGetOutputDirectory(strPath) -> str:
 
 
 def dumpData(data, dirName):
-
+    print("Dump to ", dirName)
     data = dict(**data)
     oldPictures = data.pop('listOfPics', [])
 
     newListOfPics = {}
     nbPictures = len(oldPictures)
+
+    if nbPictures == 0:
+        print("Don't dump gallery empty")
+        return
+
     picStr = generatePicStr(nbPictures)
 
     i = 1
@@ -127,6 +133,21 @@ def generatePicStr(nbPictures):
 
     picStr = 'pic_{:0' + str(zeroPad) + 'd}'
     return picStr
+
+def updateList(data: GalleryData, listOfPics): 
+
+    currentList = data.listOfPics
+
+    if not currentList:
+        data.listOfPics = listOfPics
+    
+    else: 
+    
+        for picCurr, picScraped, i, j in zip(currentList, listOfPics, range(len(currentList)), range(len(listOfPics))):
+            pass
+
+        for picScraped in listOfPics[len(currentList):]:
+            currentList.append(picScraped)
 
 
 """
