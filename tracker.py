@@ -38,7 +38,8 @@ class TrackedGallery():
         return self.__dict__["url"]
 
     def __str__(self) -> str:
-        return __repr__()
+        #return __repr__()
+        return str(self.__dict__)
     
     def __repr__(self) -> str:
         return str(self.__dict__)

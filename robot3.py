@@ -12,14 +12,16 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 
-import re
+
+import gallery_construct as gc
+
 from urllib.request import proxy_bypass, urlopen
 import urllib.parse as urlparse
 import os.path
 import utilities
 import urlqueue
 import configData
-from picture import Picture
+
 import base64
 from PIL import Image
 from pathlib import Path
@@ -32,10 +34,8 @@ from pprint import pprint
 driver = None
 CAPTCHA_PAGE = 'rl_captcha.php'
 # see all pictures
-params = {'page': '0', 'view': '2'}
 
 #Picture = collections.namedtuple('Picture', 'index href fileName')
-
 
 def main():
 
@@ -62,22 +62,26 @@ def main():
 
 def mainGalleryGrabber(galleryUrl):
 
-    galleryData = configData.GalleryData()
+    galleryData = None
     dirName = "Not defined"
 
+    global driver 
+    driver = MyDriver()
+
     try:
+        galleryData = gc.buildGallery(driver, galleryUrl)
         mainGalleryGrabber2(galleryUrl, galleryData)
     finally:
+        if galleryData:
+            if galleryData.has_key('galleryName'):
+                dirName = configData.createAndGetOutputDirectory(
+                    galleryData.galleryName)
+                configData.dumpData(galleryData, dirName)
 
-        if galleryData.has_key('galleryName'):
-            dirName = configData.createAndGetOutputDirectory(
-                galleryData.galleryName)
-            configData.dumpData(galleryData, dirName)
-
-        status = "SUCCESS"
-        if galleryData.nbOfPics != galleryData.nbTotalDownloaded:
-            tracker.failed(galleryData)
-            status = tracker.FAILED
+            status = "SUCCESS"
+            if galleryData.nbOfPics != galleryData.nbTotalDownloaded:
+                tracker.failed(galleryData)
+                status = tracker.FAILED
 
         print()
         print()
@@ -91,94 +95,13 @@ def mainGalleryGrabber(galleryUrl):
         print()
         print()
 
-def acquirePictures(galleryUrl, galleryData: configData.GalleryData) -> list:
-    cleanGalleryUrl = setUpGallery(galleryUrl, params)
-    driver.get(cleanGalleryUrl)
-
-    print(cleanGalleryUrl)
-
-    if (CAPTCHA_PAGE in cleanGalleryUrl):
-        handleCaptcha()
-
-    print('---------------------------------------------------------')
-    print("check pager")
-    xpath = '//*[@id="gallery"]//span/a[@class]'
-    pageger = driver.basic_find_elements_by_xpath(xpath)
-    print("pager len", len(pageger))
-    
-    pages = {}
-    pages[0] = cleanGalleryUrl
-    for i, pagelink in enumerate(pageger) :
-        href = pagelink.get_attribute('href') 
-        text =   pagelink.text     
-        print("a text href", pagelink.text, href)
-
-        if text.isnumeric():    
-            pages[int(text)] = href
-
-    pprint(pages)
-
-    listOfPics = []
-    for key, gallery_url in pages.items():
-        acquirePictures_per_page(gallery_url, galleryData, listOfPics, True)
-
-    return listOfPics
-
-def acquirePictures_per_page(galleryUrl, galleryData: configData.GalleryData, listOfPics :list, load_page :bool):
-
-    if load_page:
-        cleanGalleryUrl = setUpGallery(galleryUrl, params)
-        driver.get(galleryUrl)
-
-    print('---------------------------------------------------------')
-    galleryData.galleryName = utilities.getGalleryNameFromURL(galleryUrl)
-    xpath = '//*[@id="menubar"]/table/tbody/tr[1]/td[2]/table/tbody/tr/td[1]/b[1]/font'
-    galleryNameTitle = driver.find_element_by_xpath(xpath)
-
-    galleryName2 = utilities.getGalleryName(galleryNameTitle.text)
-
-    if (galleryName2):
-        galleryData['galleryName'] = utilities.getGalleryName(
-            galleryNameTitle.text)
-
-    gallery_url = utilities.getCleanURL(driver.current_url())
-    galleryData.galleryURL = gallery_url
-
-    print(galleryData.galleryName)
-
-    # find first picture
-    xpath = '//*[@id="gallery"]/form/table'
-    galleryTable = driver.find_element_by_xpath(xpath)
-
-    listId = galleryTable.find_elements(
-        by=By.XPATH, value='//table/tbody/tr[2]/td/font[2]/i')
-
-    listURL = galleryTable.find_elements(
-        by=By.XPATH, value='.//table/tbody/tr[1]/td/a')
-
-    # get Nb of pics base on page info
-    img = galleryTable.find_element(
-        by=By.XPATH, value='.//table/tbody/tr[1]/td/a/img')
-    alt = img.get_attribute('alt')
-    galleryData.nbOfPics = utilities.getNumber(alt)
-
-  
-    cur_index = len(listOfPics)
-    for i, item in enumerate(listId):
-        href = listURL[i].get_attribute('href')
-        pic = Picture(i + cur_index, href, item.text, 'new')
-        listOfPics.append(pic)
-
-    print("listOfPics", len(listOfPics))
-
 
 def mainGalleryGrabber2(galleryUrl, galleryData: configData.GalleryData):
     print(galleryUrl)
     print("Stuff")
     pprint(galleryData)
 
-    global driver 
-    driver = MyDriver()
+
 
     print("Load the list")
     #LOAD_AGAIN = True
@@ -188,7 +111,7 @@ def mainGalleryGrabber2(galleryUrl, galleryData: configData.GalleryData):
           print("Don't get pictures list")
           pass
     else:     
-        listOfPics = acquirePictures(galleryUrl, galleryData)
+        listOfPics = gc.acquirePictures(driver, galleryUrl, galleryData)
       
         configData.updateList(galleryData, listOfPics)
 
@@ -208,31 +131,9 @@ def mainGalleryGrabber2(galleryUrl, galleryData: configData.GalleryData):
 
 
 def thePictureGraber(galleryData):
-
     dirName = configData.createAndGetOutputDirectory(
         galleryData.galleryName)
-    print("Output dir: " + dirName)
-    currentGalleryData = configData.getCurrentData(dirName)
-
-    if currentGalleryData and len(currentGalleryData.listOfPics) > 0:  
-        if len(galleryData.listOfPics) == len(currentGalleryData.listOfPics):
-            galleryData.listOfPics = currentGalleryData.listOfPics
-        elif len(galleryData.listOfPics) >= len(currentGalleryData.listOfPics):
-            for picture in galleryData.listOfPics:
-                galleryData.listOfPics[picture.index] = currentGalleryData.listOfPics[picture.index]
-            
-            galleryData.nbBatchDownloaded = 0
-            galleryData.nbTotalDownloaded = 0
-        else:
-            galleryData.nbBatchDownloaded = 0
-            galleryData.nbTotalDownloaded = 0
-            configData.dumpData(galleryData, dirName)
-    else:
-        galleryData.nbBatchDownloaded = 0
-        galleryData.nbTotalDownloaded = 0
-        configData.dumpData(galleryData, dirName)
-
-
+    print("Output dir: ", dirName)
     listOfPics = galleryData.listOfPics
     galleryDataLenght = len(listOfPics)
     nbBatchDownloaded = 0
@@ -327,35 +228,6 @@ def downloadImage2(img, file_name):
 
     with open(file_name, 'wb') as f:
         f.write(base64.b64decode(img_base64))
-
-
-def setUpGallery(gallery, params) -> str:
-    print("setUpGallery")
-    cleanUrl = utilities.getGalleryNameFromURL(gallery)
-
-    m = re.search(r'/photo/(\d+)/', gallery)
-
-    url = None
-    if m:
-        # you are on photo
-        driver.get(gallery)
-        # go to the gallery
-        element = driver.find_element_by_xpath(
-            '//*[@id="main"]/center/table[2]/tbody/tr/td/table/tbody/tr/td/center/div[4]/div[3]/table/tbody/tr[1]/td[2]/a')
-
-        galleryLocation = element.get_attribute('href')
-
-        url = setUpGallery(galleryLocation, params)
-        
-    else:
-        # you are on the gallery
-        #cleanUrl = gallery.rsplit('?', 1)[0]
-        url = utilities.urlSetParams(gallery, params)
-        
-    print("galleryLocation:" , url)
-
-    return url
-
 
 def findOriginalFileName(galleryFileName, pageTitle) -> str:
     fileName = ""

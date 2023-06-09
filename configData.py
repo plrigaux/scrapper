@@ -26,9 +26,9 @@ class GalleryData(dict):
         return name in self
 
     def __getattr__(self, name):
-        if not self.has_key(name):
-            raise AttributeError(
-                "Attribute \"{}\" does not exist. Here possible choices: {}".format(name, self.keys()))
+        #if not self.has_key(name):
+        #    raise AttributeError(
+        #        "Attribute \"{}\" does not exist. Here possible choices: {}".format(name, self.keys()))
         return self[name]
 
     def __setattr__(self, name, value):

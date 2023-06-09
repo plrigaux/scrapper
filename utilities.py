@@ -1,4 +1,5 @@
 import urllib.parse as urlparse
+from urllib.parse import parse_qs
 
 import re
 
@@ -56,3 +57,13 @@ def extractFileName(title) -> str:
         return match.group(0)
         
     return None    
+
+
+def getPage(url :str) -> int:
+    parsed_url = urlparse.urlparse(url)
+    captured_value = parse_qs(parsed_url.query)['page'][0]
+
+    int_val = int(captured_value)
+
+    return int_val
+

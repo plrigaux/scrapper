@@ -29,8 +29,13 @@ class MyDriver():
         options.binary_location = binary_location
 
         #self.driver = webdriver.Chrome()
-        self.driver = webdriver.Chrome(
-            executable_path=driver_location, options=options)
+        #self.driver = webdriver.Chrome(
+        #    executable_path=driver_location, options=options)
+        
+        #self.driver = webdriver.Chrome(options=options)
+        #self.driver = webdriver.Chrome()
+        self.driver = webdriver.Firefox()
+        self.driver.set_page_load_timeout(10)
 
         #fFprofile = webdriver.FirefoxProfile()
         # I also tried True, 1 - with and without quotes
@@ -42,19 +47,21 @@ class MyDriver():
         #self.driver = webdriver.Firefox()
         self.ignored_exceptions = (NoSuchElementException,
                                    StaleElementReferenceException)
-        self.driver.set_page_load_timeout(20)
-        self.driver.implicitly_wait(20)
+        #self.driver.set_page_load_timeout(20)
+        #self.driver.implicitly_wait(20)
+
         #self.driver.set_preference("http.response.timeout", 20)
         #self.driver.set_preference("dom.max_script_run_time", 20)
 
     def find_element_by_xpath(self, xpath) -> WebElement:
-        return WebDriverWait(self.driver, 200, ignored_exceptions=self.ignored_exceptions)\
-            .until(expected_conditions.presence_of_element_located((By.XPATH, xpath)))
+        #return WebDriverWait(self.driver, 200, ignored_exceptions=self.ignored_exceptions)\     
+        #    .until(expected_conditions.presence_of_element_located((By.XPATH, xpath)))
+        return self.driver.find_element(By.XPATH, xpath)
 
     def find_elements_by_xpath(self, xpath) -> List[WebElement]:
-        return WebDriverWait(self.driver, 200, ignored_exceptions=self.ignored_exceptions)\
-            .until(expected_conditions.presence_of_all_elements_located((By.XPATH, xpath)))
-        #return self.driver.find_elements(By.XPATH, xpath)
+        #return WebDriverWait(self.driver, 200, ignored_exceptions=self.ignored_exceptions)\
+        #    .until(expected_conditions.presence_of_all_elements_located((By.XPATH, xpath)))
+        return self.driver.find_elements(By.XPATH, xpath)
     
     def basic_find_elements_by_xpath(self, xpath) -> List[WebElement]:
         print("xpath", xpath)
@@ -68,10 +75,15 @@ class MyDriver():
 
     def get(self, url) -> None:
         print("Opening page:", url)
+    
         timeout = 0
         while True:
             try:
+                self.driver.set_page_load_timeout(10)
+                print("to",self.driver.timeouts)
                 self.driver.get(url)
+
+                print("page got")
                 break
             except:
                 timeout += 1
