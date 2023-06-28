@@ -7,7 +7,7 @@ from selenium.webdriver.common.by import By
 from picture import Picture
 
 
-PARAMS = {'page': '0', 'view': '0'}
+PARAMS = {'page': '0', 'view': '2'}
 
 def setUpGallery(driver : MyDriver, gallery) -> str:
     print("setUpGallery")

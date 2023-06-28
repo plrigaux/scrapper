@@ -80,7 +80,6 @@ class MyDriver():
         while True:
             try:
                 self.driver.set_page_load_timeout(10)
-                print("to",self.driver.timeouts)
                 self.driver.get(url)
 
                 print("page got")

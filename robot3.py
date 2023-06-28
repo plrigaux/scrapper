@@ -33,9 +33,12 @@ from pprint import pprint
 
 driver = None
 CAPTCHA_PAGE = 'rl_captcha.php'
+FAILED = 'failed'
+NEW = 'new'
 # see all pictures
 
 #Picture = collections.namedtuple('Picture', 'index href fileName')
+
 
 def main():
 
@@ -65,7 +68,7 @@ def mainGalleryGrabber(galleryUrl):
     galleryData = None
     dirName = "Not defined"
 
-    global driver 
+    global driver
     driver = MyDriver()
 
     try:
@@ -101,18 +104,16 @@ def mainGalleryGrabber2(galleryUrl, galleryData: configData.GalleryData):
     print("Stuff")
     pprint(galleryData)
 
-
-
     print("Load the list")
     #LOAD_AGAIN = True
     LOAD_AGAIN = False
 
     if len(galleryData.listOfPics) > 0 and not LOAD_AGAIN:
-          print("Don't get pictures list")
-          pass
-    else:     
+        print("Don't get pictures list")
+        pass
+    else:
         listOfPics = gc.acquirePictures(driver, galleryUrl, galleryData)
-      
+
         configData.updateList(galleryData, listOfPics)
 
         tracker.save_a_process_gallery(galleryData)
@@ -147,11 +148,14 @@ def thePictureGraber(galleryData):
 
     for i, picture in enumerate(listOfPics, start=1):
         print(picture)
-        if (picture.status == 'new'):
+        if (picture.status == NEW):
             print("Downloading {} of {} ...".format(i, galleryDataLenght))
 
-            #open page
+            # open page
             driver.get(picture.href)
+
+            if driver.current_url == "https://www.imagefap.com/human-verification":
+                break
 
             img = findImgNode(galleryData)
             if img is not None:
@@ -165,18 +169,12 @@ def thePictureGraber(galleryData):
                 picture.fileName = findOriginalFileName(
                     picture.fileName, driver.title())
 
-                file_name = os.path.join(dirName, picture.fileName)
+                file_name = get_file_name(dirName, picture)
 
-                if (downloadImage1(src, file_name) == True):
-                    #downloadImage2(img, file_name)
-
-                    picture.status = 'downloaded'
-                    nbBatchDownloaded = nbBatchDownloaded + 1
-                    galleryData['nbBatchDownloaded'] = nbBatchDownloaded
-                    nbTotalDownloaded = nbTotalDownloaded + 1
-                else:
-                    picture.status = 'failed'
-
+                nbTotalDownloaded = downloadImage(galleryData, nbBatchDownloaded, nbTotalDownloaded, picture, file_name)
+        elif (picture.status == FAILED):
+            file_name = get_file_name(dirName, picture)
+            nbTotalDownloaded = downloadImage(galleryData, nbBatchDownloaded, nbTotalDownloaded, picture, file_name)
         else:
             print("Pass {} of {}".format(i, galleryDataLenght))
             nbTotalDownloaded = nbTotalDownloaded + 1
@@ -185,6 +183,26 @@ def thePictureGraber(galleryData):
 
     print("Output dir: " + dirName)
 
+def get_file_name(dirName, picture):
+    fn = picture.fileName
+    fn = fn.rsplit('/', 1)[-1]
+    file_name = os.path.join(dirName, fn)
+    return file_name
+
+def downloadImage(galleryData, nbBatchDownloaded, nbTotalDownloaded, picture, file_name):
+    if (downloadImage1(picture.imgSrc, file_name) == True):
+                #downloadImage2(img, file_name)
+        picture.status = 'downloaded'
+        nbBatchDownloaded = nbBatchDownloaded + 1
+        galleryData['nbBatchDownloaded'] = nbBatchDownloaded
+        nbTotalDownloaded = nbTotalDownloaded + 1
+    else:
+        if picture.status == FAILED:
+            picture.status = NEW
+        else:
+            picture.status = FAILED
+    return nbTotalDownloaded
+
 
 def downloadImage1(src, file_name):
     try:
@@ -192,13 +210,15 @@ def downloadImage1(src, file_name):
         resource = urlopen(src, timeout=10)
 
         if resource is None:
+            print("No image", src)
             return False
-        
+
         with open(file_name, "wb") as output:
             output.write(resource.read())
             output.close()
         return True
-    except:
+    except Exception as exp:
+        print("Exeption image", src, exp)
         return False
 
 
@@ -229,6 +249,7 @@ def downloadImage2(img, file_name):
     with open(file_name, 'wb') as f:
         f.write(base64.b64decode(img_base64))
 
+
 def findOriginalFileName(galleryFileName, pageTitle) -> str:
     fileName = ""
     if (galleryFileName.endswith("...")):
@@ -251,7 +272,7 @@ def findImgNode(galleryData, callLevel=0) -> WebElement | None:
         return img
 
     try:
-        img : WebElement = WebDriverWait(driver.driver, 5, ignored_exceptions=ignored_exceptions)\
+        img: WebElement = WebDriverWait(driver.driver, 5, ignored_exceptions=ignored_exceptions)\
             .until(expected_conditions.presence_of_element_located((By.XPATH, imgpath)))
     except StaleElementReferenceException:
         # find again
@@ -266,7 +287,8 @@ def findImgNode(galleryData, callLevel=0) -> WebElement | None:
             img = findImgNode(galleryData, callLevel + 1)
 
     return img
-    
+
+
 """
 def contextMenuClick(element : WebElement):
     evt = element.ownerDocument.createEvent('MouseEvents')
@@ -286,6 +308,7 @@ def contextMenuClick(element : WebElement):
       return !element.dispatchEvent(evt)
     
 """
+
 
 def removePopup():
     xpbtn = '/html/body/div[3]/div/div[1]/div'
