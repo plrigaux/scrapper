@@ -12,6 +12,7 @@ from pprint import pprint
 TRACKER_FILE_NAME = "tracker.yaml"
 FAILED = "FAILED"
 IN_PROGRESS = "IN_PROGRESS"
+NEW = "NEW"
 
 galleries = {}
 
@@ -78,7 +79,7 @@ def getUncompletedGallery() -> str:
     pass
 
 
-def save_a_process_gallery(gallery: configData.GalleryData, status="In process") -> None:
+def save_a_process_gallery(gallery: configData.GalleryData, status=IN_PROGRESS) -> None:
     save_a_process(gallery.galleryName, gallery.galleryURL,
                    gallery.nbOfPics, gallery.nbTotalDownloaded, status)
 
@@ -92,6 +93,9 @@ def save_a_process(galleryName: str, galleryUrl: str, nbOfPics: int, nbTotalDown
     galleries[proc.url] = proc
     save()
 
+
+def in_progress(galleryData: configData.GalleryData):
+    save_a_process_gallery(galleryData, status=IN_PROGRESS)
 
 def failed(galleryData: configData.GalleryData):
     save_a_process_gallery(galleryData, status=FAILED)
@@ -127,10 +131,19 @@ def save():
 
 
 def getFirstFailed() -> str:
+    return getFirst(FAILED)
+
+
+def getFirstNew() -> str:
+    return getFirst(NEW)
+
+
+
+def getFirst(status) -> str:
     load()
 
     for track in [*galleries.values()]:
-        if track.status == FAILED:
+        if track.status == status:
             return track.url
 
     return None

@@ -71,6 +71,9 @@ class SourceGetter():
         if use_tracker:
             try:
                 url = tracker.getFirstFailed()
+                
+                if url is None:
+                    url = tracker.getFirstNew()
 
                 if url is not None:
                     urltype = self.checkUrl(url)

@@ -73,6 +73,7 @@ def mainGalleryGrabber(galleryUrl):
 
     try:
         galleryData = gc.buildGallery(driver, galleryUrl)
+        tracker.in_progress(galleryData)
         mainGalleryGrabber2(galleryUrl, galleryData)
     finally:
         if galleryData:
