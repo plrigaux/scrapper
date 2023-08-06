@@ -32,7 +32,7 @@ import argparse
 from pprint import pprint
 
 driver = None
-CAPTCHA_PAGE = 'rl_captcha.php'
+CAPTCHA_PAGE = 'human-verification'
 FAILED = 'failed'
 NEW = 'new'
 # see all pictures
@@ -269,11 +269,11 @@ def findImgNode(galleryData, callLevel=0) -> WebElement | None:
     img = None
 
     # limit the stack
-    if (callLevel > 10):
+    if (callLevel > 20):
         return img
 
     try:
-        img: WebElement = WebDriverWait(driver.driver, 5, ignored_exceptions=ignored_exceptions)\
+        img: WebElement = WebDriverWait(driver.driver, 15, ignored_exceptions=ignored_exceptions)\
             .until(expected_conditions.presence_of_element_located((By.XPATH, imgpath)))
     except StaleElementReferenceException:
         # find again
@@ -322,7 +322,11 @@ def removePopup():
     except ElementNotInteractableException:
         pass
 
+def handleCaptcha(level=0):
+    print("Captcha detected")
+    pass
 
+"""
 def handleCaptcha(level=0):
 
     if (level > 10):
@@ -334,13 +338,13 @@ def handleCaptcha(level=0):
     #get_captcha(driver, ele_captcha, "captcha.jpeg")
     #print (ele_captcha)
 
-    img_base64 = driver.driver.execute_script("""
-    var ele = arguments[0];
-    var cnv = document.createElement('canvas');
-    cnv.width = ele.width; cnv.height = ele.height;
-    cnv.getContext('2d').drawImage(ele, 0, 0);
-    return cnv.toDataURL('image/jpeg').substring(22);    
-    """, driver.driver.find_element("xpath", captchaXpath))
+    #img_base64 = driver.driver.execute_script(
+    #var ele = arguments[0];
+    #var cnv = document.createElement('canvas');
+    #cnv.width = ele.width; cnv.height = ele.height;
+    #cnv.getContext('2d').drawImage(ele, 0, 0);
+    #return cnv.toDataURL('image/jpeg').substring(22);    
+    #, driver.driver.find_element("xpath", captchaXpath))
 
     dirPath = "stuff"
     Path(dirPath).mkdir(parents=True, exist_ok=True)
@@ -358,16 +362,17 @@ def handleCaptcha(level=0):
 
     input.send_keys(code)
     time.sleep(2)
-    """
-    try:
-        input.send_keys(Keys.ENTER)
-    except StaleElementReferenceException:
-        print("input.send_keys(Keys.ENTER)", StaleElementReferenceException)
-"""
+
+    #try:
+    #    input.send_keys(Keys.ENTER)
+    #except StaleElementReferenceException:
+    #    print("input.send_keys(Keys.ENTER)", StaleElementReferenceException)
+
     current_url = driver.current_url()
     if (CAPTCHA_PAGE in current_url):
         handleCaptcha(level + 1)
 
+"""
 
 def get_captcha(driver, element, path):
     # now that we have the preliminary stuff out of the way time to get that image :D

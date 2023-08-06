@@ -181,6 +181,9 @@ tracker_file_path.touch(exist_ok=True)
 def displayTraker():
     load()
     print(yaml.dump(galleries, default_flow_style=False))
+    print("Total galleries : ", len(galleries))
+    nbOfPics = sum(int(p.nbOfPics) for p in galleries.values())
+    print("Total pictures : ", nbOfPics)
 
 
 def main():

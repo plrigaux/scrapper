@@ -9,7 +9,8 @@ def main():
     driver = MyDriver()
 
     "https://www.imagefap.com/organizer/514191/NIP"
-    multi_gal_url = 'https://www.imagefap.com/organizer/437400/Nude-in-public.com?page='
+    multi_gal_url = 'https://www.imagefap.com/organizer/437400/Nude-in-public.com?page=1'
+    multi_gal_url = 'https://www.imagefap.com/organizer/437400/Nude-in-public.com?page=3'
 
     #grab galery
 
@@ -20,6 +21,7 @@ def main():
     #xpath = "//table[@class='blk_galleries']////td[@class='blk_galleries']"
     #xpath = "/html/body/center/table[2]/tbody/tr/td/table/tbody/tr/td/div/center/center/table/tbody/tr/td/table/tbody/tr/td[2]/table[2]/tbody/tr[48]/td[1]/font/a"
     xpath = "/html/body/center/table[2]/tbody/tr/td/table/tbody/tr/td/div/center/center/table/tbody/tr/td/table/tbody/tr/td[2]/table[2]/tbody/tr"
+    xpath = "/html/body/center/table[2]/tbody/tr/td/table/tbody/tr/td/div/center/center/table/tbody/tr/td/table/tbody/tr/td[2]/table/tbody/tr"
     all_gall = driver.find_elements_by_xpath(xpath)
 
     print("Nb gal: ", len (all_gall))
@@ -48,7 +50,7 @@ def main():
             save_gallery(gal_name, href, nb)
             i += 1
 
-    driver.quit()
+    #driver.quit()
 
 def save_gallery(name :str, href, nb):
 
