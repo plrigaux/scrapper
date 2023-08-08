@@ -105,3 +105,6 @@ class MyDriver():
 
     def save_screenshot(self, path) -> bool:
         return self.driver.save_screenshot(path)
+    
+    def minimize_window(self):
+        self.driver.minimize_window() 

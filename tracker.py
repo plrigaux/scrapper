@@ -102,7 +102,7 @@ def failed(galleryData: configData.GalleryData):
 
 
 def success(galleryData: configData.GalleryData):
-    global galleries
+   
     galleryData.status = "SUCCESS"
     load()
     # remove the tracking of sussessfull
@@ -116,18 +116,17 @@ def success(galleryData: configData.GalleryData):
 
 
 def save():
-    global galleries
+
     data = []
     for gal in galleries.values():
         data.append(dict(gal.__dict__))
 
     data.sort(key=lambda x: x['date'], reverse=True)
 
-    print("save data", len(data), "gallery lenght", len(galleries))
-    print("save data", data)
-
     with open(tracker_file, mode="wt", encoding="utf-8") as file:
         yaml.dump(data, file, default_flow_style=False, sort_keys=False)
+
+    print_tracked_info()
 
 
 def getFirstFailed() -> str:
@@ -180,12 +179,15 @@ tracker_file_path.touch(exist_ok=True)
 
 def displayTraker():
     load()
+    print_tracked_info()
+
+def print_tracked_info():
     print(yaml.dump(galleries, default_flow_style=False))
-    print("Total galleries : ", len(galleries))
+    print("Tracked Total galleries : ", len(galleries))
     nbOfPics = sum(int(p.nbOfPics) for p in galleries.values())
-    print("Total pictures : ", nbOfPics)
+    print("Tracked Total pictures : ", nbOfPics)
 
-
+    
 def main():
     galleries = []
     t1 = TrackedGallery(**{"name": "ba", "url": "http"})

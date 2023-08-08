@@ -51,16 +51,17 @@ def main():
     cli_config = vars(args)
     print(cli_config)
 
-    sg = urlqueue.SourceGetter()
+    source_getter = urlqueue.SourceGetter()
 
     use_tracker = True
     if cli_config['notrack']:
         print("Don't use tracker")
         use_tracker = False
 
-    gallery = sg.getFirstValid(use_tracker=use_tracker)
+    while True:
+        gallery = source_getter.getFirstValid(use_tracker=use_tracker)
 
-    mainGalleryGrabber(gallery)
+        mainGalleryGrabber(gallery)
 
 
 def mainGalleryGrabber(galleryUrl):
@@ -146,7 +147,8 @@ def thePictureGraber(galleryData):
 
     # TODO handle https://www.imagefap.com/rl_captcha.php
     # INFO https://gist.github.com/spirkaa/4c3b8ad8fd34324bd307
-
+    driver.minimize_window()
+    
     for i, picture in enumerate(listOfPics, start=1):
         print(picture)
         if (picture.status == NEW):

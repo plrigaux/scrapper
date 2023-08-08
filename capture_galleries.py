@@ -8,9 +8,10 @@ def main():
     global driver
     driver = MyDriver()
 
-    "https://www.imagefap.com/organizer/514191/NIP"
-    multi_gal_url = 'https://www.imagefap.com/organizer/437400/Nude-in-public.com?page=1'
-    multi_gal_url = 'https://www.imagefap.com/organizer/437400/Nude-in-public.com?page=3'
+    multi_gal_url = "https://www.imagefap.com/organizer/514191/NIP"
+    multi_gal_url = "https://www.imagefap.com/organizer/514191/NIP?page=1"
+    #multi_gal_url = 'https://www.imagefap.com/organizer/437400/Nude-in-public.com?page=1'
+    #multi_gal_url = 'https://www.imagefap.com/organizer/437400/Nude-in-public.com?page=3'
 
     #grab galery
 
