@@ -23,9 +23,9 @@ import urlqueue
 import configData
 
 import base64
-from PIL import Image
+#from PIL import Image
 from pathlib import Path
-import captcha
+#import captcha
 import time
 import tracker
 import argparse
