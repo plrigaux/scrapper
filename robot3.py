@@ -62,6 +62,7 @@ def main():
         gallery = source_getter.getFirstValid(use_tracker=use_tracker)
 
         mainGalleryGrabber(gallery)
+        use_tracker = True
 
 
 def mainGalleryGrabber(galleryUrl):
