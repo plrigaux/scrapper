@@ -8,7 +8,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options
 from typing import List
 
 driver_location = '/usr/bin/chromedriver'
@@ -20,39 +20,26 @@ class MyDriver():
 
     def __init__(self):
 
+
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference("permissions.default.image", 2)
+
+        firefox_profile = webdriver.FirefoxProfile()
+        firefox_profile.set_preference('permissions.default.image', 2)
+
         options = Options()
-        options.add_argument("--no-sandbox")  # bypass OS security model
-        # overcome limited resource problems
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_experimental_option(
-            "excludeSwitches", ["enable-automation"])
-        options.add_experimental_option('useAutomationExtension', False)
-        options.binary_location = binary_location
+        options.profile = profile
 
-        #self.driver = webdriver.Chrome()
-        #self.driver = webdriver.Chrome(
-        #    executable_path=driver_location, options=options)
+
+
+        self.driver = webdriver.Firefox(options=options)
         
-        #self.driver = webdriver.Chrome(options=options)
-        #self.driver = webdriver.Chrome()
-        self.driver = webdriver.Firefox()
-        self.driver.set_page_load_timeout(10)
+        #self.driver.set_page_load_timeout(10)
 
-        #fFprofile = webdriver.FirefoxProfile()
-        # I also tried True, 1 - with and without quotes
-        #fFprofile.set_preference(   'network.websocket.allowInsecureFromHTTPS', True)
-        #fFprofile.DEFAULT_PREFERENCES['frozen']["dom.disable_open_during_load"] = True
-# FFprofile = webdriver.FirefoxProfile('C:/Users/ExampleUser/AppData/Local/Mozilla/Firefox/Profiles/owieroiuysd.testprofile')
 
-        #self.driver = webdriver.Firefox(firefox_profile = fFprofile)
-        #self.driver = webdriver.Firefox()
         self.ignored_exceptions = (NoSuchElementException,
                                    StaleElementReferenceException)
-        #self.driver.set_page_load_timeout(20)
-        #self.driver.implicitly_wait(20)
 
-        #self.driver.set_preference("http.response.timeout", 20)
-        #self.driver.set_preference("dom.max_script_run_time", 20)
 
     def find_element_by_xpath(self, xpath) -> WebElement:
         #return WebDriverWait(self.driver, 200, ignored_exceptions=self.ignored_exceptions)\     
