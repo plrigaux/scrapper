@@ -68,6 +68,10 @@ class GalleryData(dict):
     @property
     def listOfPics(self) -> list:
         return super().get("listOfPics", [])
+    
+    @property
+    def categories(self) -> list[str]:
+        return super().get("categories", [])
 
 try :
     # Read YAML file
@@ -86,14 +90,18 @@ def getOutputDirectory(strPath=""):
     return dirPath
 
 
-def createAndGetOutputDirectory(strPath) -> str:
+def createAndGetOutputDirectory(strPath :str) -> str:
     dirPath = getOutputDirectory(strPath)
     Path(dirPath).mkdir(parents=True, exist_ok=True)
 
     return dirPath
 
 
-def dumpData(data, dirName):
+def dumpData(data :GalleryData, dirName :str):
+
+    if not dirName:
+        dirName = createAndGetOutputDirectory(data.galleryName)
+
     print("Dump to ", dirName)
     data = dict(**data)
     oldPictures = data.pop('listOfPics', [])
@@ -195,7 +203,7 @@ def loadGalleryData(loader, node):
     return g
 
 
-def getCurrentData(directory) -> GalleryData:
+def getCurrentData(directory:str) -> GalleryData:
     fileName = os.path.join(directory, dataYaml)
     fileName = os.path.normpath(fileName)
 
@@ -208,25 +216,29 @@ def getCurrentData(directory) -> GalleryData:
     with open(fileName, 'r') as stream:
         data = yaml.load(stream, Loader=yaml.Loader)
 
-    picsDict = data.get('listOfPics', {})
+
+    gallery = GalleryData(data)
+    picsDict = gallery.listOfPics
 
     pics = []
     for pic in picsDict.values():
         a = picture.Picture(**pic)
         pics.append(a)
 
-    return GalleryData(listOfPics = pics)
+    gallery.listOfPics = pics
+
+    return gallery
 
 
 if __name__ == "__main__":
     print("tests")
-    directory = r"D:\media\xtreamdownloader\Cali Carter - Workout Slut"
+    directory = r"/media/plr/DATA/media/xtreamdownloader/1030"
 
     data = getCurrentData(directory)
 
-    # print(data)
+    pprint.pprint(data)
 
-    l = data['listOfPics']
+"""     l = data['listOfPics']
 
     for i, val in enumerate(l, start=100):
-        print(i, val)
+        print(i, val) """

@@ -14,6 +14,7 @@ from selenium.webdriver.remote.webelement import WebElement
 
 
 import gallery_construct as gc
+from configData import GalleryData
 
 from urllib.request import proxy_bypass, urlopen
 import urllib.parse as urlparse
@@ -59,13 +60,13 @@ def main():
         use_tracker = False
 
     while True:
-        gallery = source_getter.getFirstValid(use_tracker=use_tracker)
+        galleryURL = source_getter.getFirstValid(use_tracker=use_tracker)
 
-        mainGalleryGrabber(gallery)
+        mainGalleryGrabber(galleryURL)
         use_tracker = True
 
 
-def mainGalleryGrabber(galleryUrl):
+def mainGalleryGrabber(galleryUrl: str):
 
     galleryData = None
     dirName = "Not defined"
@@ -193,7 +194,7 @@ def get_file_name(dirName, picture):
     file_name = os.path.join(dirName, fn)
     return file_name
 
-def downloadImage(galleryData, nbBatchDownloaded, nbTotalDownloaded, picture, file_name):
+def downloadImage(galleryData : GalleryData, nbBatchDownloaded: int, nbTotalDownloaded : int, picture, file_name) -> int:
     if (downloadImage1(picture.imgSrc, file_name) == True):
                 #downloadImage2(img, file_name)
         picture.status = 'downloaded'

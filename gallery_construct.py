@@ -65,6 +65,8 @@ def buildGallery(driver: MyDriver, galleryUrl : str) -> configData.GalleryData:
     else: 
         theGallery = currentGalleryData
 
+    configData.dumpData(theGallery, None)
+
     return theGallery
 
 
@@ -103,10 +105,17 @@ def basicGallery(driver: MyDriver, galleryUrl : str) -> configData.GalleryData:
     alt = img.get_attribute('alt')
     basicGalleryData.nbOfPics = utilities.getNumber(alt)
 
-   
+    xpath = '//div[@id="cnt_cats"]/a'
+    cats = []
+    for we in driver.find_elements_by_xpath(xpath):
+        cats.append(we.text)
+
+    print("Gallery Categories", cats)
+    basicGalleryData.categories = cats
+
     return basicGalleryData
 
-def getLocal(galleryData: configData.GalleryData):
+def getLocal(galleryData: configData.GalleryData) -> configData.GalleryData:
     dirName = configData.createAndGetOutputDirectory(
         galleryData.galleryName)
     print("Output dir: ", dirName)
