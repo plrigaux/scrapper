@@ -100,6 +100,16 @@ def in_progress(galleryData: configData.GalleryData):
 def failed(galleryData: configData.GalleryData):
     save_a_process_gallery(galleryData, status=FAILED)
 
+def new_url(url: str):
+    gallery = configData.GalleryData()
+
+
+    gallery.galleryName = "Unknown"
+    gallery.galleryURL = url
+    gallery.nbOfPics = -1
+    gallery.nbTotalDownloaded= -1
+
+    save_a_process_gallery(gallery, status=NEW)
 
 def success(galleryData: configData.GalleryData):
    
@@ -220,3 +230,4 @@ def main():
 if __name__ == '__main__':
     # main()
     displayTraker()
+    #new_url("https://www.imagefap.com/gallery/10257503")

@@ -66,7 +66,7 @@ class SourceGetter():
 
         return None
 
-    def getFirstValid(self, use_tracker=True):
+    def getFirstValid(self, use_tracker=True) -> str:
 
         if use_tracker:
             try:
