@@ -76,8 +76,8 @@ def mainGalleryGrabber(galleryUrl: str):
 
     try:
         galleryData = gc.buildGallery(driver, galleryUrl)
-        tracker.in_progress(galleryData)
-        mainGalleryGrabber2(galleryUrl, galleryData)
+        tracker.in_progress(galleryData, galleryUrl)
+        mainGalleryGrabber2(galleryData)
     finally:
         if galleryData:
             if galleryData.has_key('galleryName'):
@@ -103,8 +103,8 @@ def mainGalleryGrabber(galleryUrl: str):
         print()
 
 
-def mainGalleryGrabber2(galleryUrl, galleryData: configData.GalleryData):
-    print(galleryUrl)
+def mainGalleryGrabber2(galleryData: configData.GalleryData):
+    print(galleryData.galleryURL)
     print("Stuff")
     pprint(galleryData)
 
@@ -116,7 +116,7 @@ def mainGalleryGrabber2(galleryUrl, galleryData: configData.GalleryData):
         print("Don't get pictures list")
         pass
     else:
-        listOfPics = gc.acquirePictures(driver, galleryUrl, galleryData)
+        listOfPics = gc.acquirePictures(driver, galleryData)
 
         configData.updateList(galleryData, listOfPics)
 

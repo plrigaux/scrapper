@@ -79,23 +79,27 @@ def getUncompletedGallery() -> str:
     pass
 
 
-def save_a_process_gallery(gallery: configData.GalleryData, status=IN_PROGRESS) -> None:
+def save_a_process_gallery(gallery: configData.GalleryData, status=IN_PROGRESS, old_gallery_url=None ) -> None:
     save_a_process(gallery.galleryName, gallery.galleryURL,
-                   gallery.nbOfPics, gallery.nbTotalDownloaded, status)
+                   gallery.nbOfPics, gallery.nbTotalDownloaded, status, old_gallery_url )
 
 
-def save_a_process(galleryName: str, galleryUrl: str, nbOfPics: int, nbTotalDownloaded: int, status=IN_PROGRESS) -> None:
+def save_a_process(galleryName: str, galleryUrl: str, nbOfPics: int, nbTotalDownloaded: int, status=IN_PROGRESS, old_gallery_url:str=None ) -> None:
 
     date = datetime.datetime.now().replace(microsecond=0).isoformat()
     proc = TrackedGallery(name=galleryName, url=galleryUrl,
                           date=date, nbOfPics=nbOfPics, nbTotalDownloaded=nbTotalDownloaded, status=status)
     load()
     galleries[proc.url] = proc
+
+    if proc.url != old_gallery_url :
+        galleries.pop(old_gallery_url, None)
+
     save()
 
 
-def in_progress(galleryData: configData.GalleryData):
-    save_a_process_gallery(galleryData, status=IN_PROGRESS)
+def in_progress(galleryData: configData.GalleryData, old_gallery_url : str):
+    save_a_process_gallery(galleryData, status=IN_PROGRESS, old_gallery_url=old_gallery_url)
 
 def failed(galleryData: configData.GalleryData):
     save_a_process_gallery(galleryData, status=FAILED)

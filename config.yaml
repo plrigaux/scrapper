@@ -1,4 +1,4 @@
 #outputDirectory: D:/media/xtreamdownloader
-outputDirectory: /media/plr/DATA/media/xtreamdownloader
+outputDirectory: /mnt/samdata/media/xtreamdownloader
 #browser=firefox
 browser: chrome

@@ -1,0 +1,3 @@
+pip install selenium
+pip install tk
+sudo dnf install python3-tkinter
