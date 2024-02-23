@@ -9,7 +9,7 @@ import tracker
 class SourceGetter():
 
     def __init__(self):
-        self.queue = []
+        #self.queue = []
         self.last_clipboard = ''
 
     def checkUrl(self, url):
@@ -60,8 +60,8 @@ class SourceGetter():
             self.last_clipboard = clipboard
             urltype = self.checkUrl(clipboard)
             if urltype:
-                print("OK " + clipboard)
-                self.emptyClipboard()
+                print("OK URL: " + clipboard)
+                #self.emptyClipboard()
                 return clipboard
 
         return None

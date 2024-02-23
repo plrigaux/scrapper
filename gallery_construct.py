@@ -5,7 +5,7 @@ import utilities
 import re
 from selenium.webdriver.common.by import By
 from picture import Picture
-
+from selenium.common.exceptions import NoSuchElementException
 
 PARAMS = {'page': '0', 'view': '2'}
 
@@ -80,8 +80,14 @@ def basicGallery(driver: MyDriver, galleryUrl : str) -> configData.GalleryData:
 
     print('---------------------------------------------------------')
     basicGalleryData.galleryName = utilities.getGalleryNameFromURL(galleryUrl)
-    xpath = '//*[@id="menubar"]/table/tbody/tr[1]/td[2]/table/tbody/tr/td[1]/b[1]/font'
-    galleryNameTitle = driver.find_element_by_xpath(xpath)
+
+    try:
+        xpath = '//*[@id="menubar"]/table/tbody/tr[1]/td[2]/table/tbody/tr/td[1]/b[1]/font'
+        galleryNameTitle = driver.find_element_by_xpath(xpath)
+    except NoSuchElementException:
+        xpath = '/html/head/title'
+        galleryNameTitle = driver.find_element_by_xpath(xpath)
+
 
     galleryName2 = utilities.getGalleryName(galleryNameTitle.text)
 

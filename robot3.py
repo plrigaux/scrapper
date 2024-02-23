@@ -289,6 +289,8 @@ def findImgNode(galleryData, callLevel=0) -> WebElement | None:
         currentUrl = driver.current_url()
         if (CAPTCHA_PAGE in currentUrl):
             handleCaptcha()
+            if callLevel > 2:
+                exit()
             img = findImgNode(galleryData, callLevel + 1)
 
     return img
