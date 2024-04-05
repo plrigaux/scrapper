@@ -114,7 +114,7 @@ def basicGallery(driver: MyDriver, galleryUrl : str) -> configData.GalleryData:
     galleryName2 = utilities.getGalleryName(galleryNameTitle.text)
 
     if (galleryName2):
-        basicGalleryData['galleryName'] = utilities.getGalleryName(
+        basicGalleryData.galleryName = utilities.getGalleryName(
         galleryNameTitle.text)
 
     gallery_url = utilities.getCleanURL(driver.current_url())

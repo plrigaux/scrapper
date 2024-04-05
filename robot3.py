@@ -24,9 +24,9 @@ import urlqueue
 import configData
 
 import base64
-#from PIL import Image
+# from PIL import Image
 from pathlib import Path
-#import captcha
+# import captcha
 import time
 import tracker
 import argparse
@@ -39,7 +39,7 @@ driver = None
 
 # see all pictures
 
-#Picture = collections.namedtuple('Picture', 'index href fileName')
+# Picture = collections.namedtuple('Picture', 'index href fileName')
 
 
 def main():
@@ -79,9 +79,11 @@ def mainGalleryGrabber(galleryUrl: str):
         galleryData = gc.buildGallery(driver, galleryUrl)
         tracker.in_progress(galleryData, galleryUrl)
         mainGalleryGrabber2(galleryData)
+    except KeyboardInterrupt:
+        print('Interrupted')
     finally:
         if galleryData:
-            if galleryData.has_key('galleryName'):        
+            if galleryData.has_name():
                 configData.dumpData(galleryData)
 
             status = SUCCESS
@@ -102,13 +104,13 @@ def mainGalleryGrabber(galleryUrl: str):
         print()
 
 
-def mainGalleryGrabber2(galleryData: configData.GalleryData):
+def mainGalleryGrabber2(galleryData: GalleryData):
     print(galleryData.galleryURL)
     print("Stuff")
     pprint(galleryData)
 
     print("Load the list")
-    #LOAD_AGAIN = True
+    # LOAD_AGAIN = True
     LOAD_AGAIN = False
 
     if len(galleryData.listOfPics) > 0 and not LOAD_AGAIN:
@@ -134,10 +136,10 @@ def mainGalleryGrabber2(galleryData: configData.GalleryData):
     driver.quit()
 
 
-def thePictureGraber(galleryData):
+def thePictureGraber(galleryData: GalleryData):
     dirName = configData.createAndGetOutputDirectory(
         galleryData.galleryName)
-    
+
     print("Output dir: ", dirName)
     listOfPics = galleryData.listOfPics
     galleryDataLenght = len(listOfPics)
@@ -150,7 +152,7 @@ def thePictureGraber(galleryData):
     # TODO handle https://www.imagefap.com/rl_captcha.php
     # INFO https://gist.github.com/spirkaa/4c3b8ad8fd34324bd307
     driver.minimize_window()
-    
+
     for i, picture in enumerate(listOfPics, start=1):
         print(picture)
         if (picture.status == NEW):
@@ -176,17 +178,20 @@ def thePictureGraber(galleryData):
 
                 file_name = get_file_name(dirName, picture)
 
-                nbTotalDownloaded = downloadImage(galleryData, nbBatchDownloaded, nbTotalDownloaded, picture, file_name)
+                nbTotalDownloaded = downloadImage(
+                    galleryData, nbBatchDownloaded, nbTotalDownloaded, picture, file_name)
         elif (picture.status == FAILED):
             file_name = get_file_name(dirName, picture)
-            nbTotalDownloaded = downloadImage(galleryData, nbBatchDownloaded, nbTotalDownloaded, picture, file_name)
+            nbTotalDownloaded = downloadImage(
+                galleryData, nbBatchDownloaded, nbTotalDownloaded, picture, file_name)
         else:
             print("Pass {} of {}".format(i, galleryDataLenght))
             nbTotalDownloaded = nbTotalDownloaded + 1
 
-        galleryData['nbTotalDownloaded'] = nbTotalDownloaded
+        galleryData.nbTotalDownloaded = nbTotalDownloaded
 
     configData.dumpData(galleryData)
+
 
 def get_file_name(dirName, picture):
     fn = picture.fileName
@@ -194,12 +199,13 @@ def get_file_name(dirName, picture):
     file_name = os.path.join(dirName, fn)
     return file_name
 
-def downloadImage(galleryData : GalleryData, nbBatchDownloaded: int, nbTotalDownloaded : int, picture, file_name) -> int:
+
+def downloadImage(galleryData: GalleryData, nbBatchDownloaded: int, nbTotalDownloaded: int, picture, file_name) -> int:
     if (downloadImage1(picture.imgSrc, file_name) == True):
-                #downloadImage2(img, file_name)
+        # downloadImage2(img, file_name)
         picture.status = DOWNLOADED
         nbBatchDownloaded = nbBatchDownloaded + 1
-        galleryData['nbBatchDownloaded'] = nbBatchDownloaded
+        galleryData.nbBatchDownloaded = nbBatchDownloaded
         nbTotalDownloaded = nbTotalDownloaded + 1
     else:
         if picture.status == FAILED:
@@ -228,14 +234,14 @@ def downloadImage1(src, file_name):
 
 
 def downloadImage2(img, file_name):
-    #get_captcha(driver, ele_captcha, "captcha.jpeg")
-    #print (ele_captcha)
+    # get_captcha(driver, ele_captcha, "captcha.jpeg")
+    # print (ele_captcha)
 
     # img_base64 = driver.driver.execute_script("""
     # var ele = arguments[0];
     # var cnv = document.createElement('canvas');
-    #cnv.width = ele.width; cnv.height = ele.height;
-    #cnv.getContext('2d').drawImage(ele, 0, 0);
+    # cnv.width = ele.width; cnv.height = ele.height;
+    # cnv.getContext('2d').drawImage(ele, 0, 0);
     # return cnv.toDataURL('image/jpeg').substring(22);
     # """, img)
 
@@ -265,9 +271,9 @@ def findOriginalFileName(galleryFileName, pageTitle) -> str:
     return fileName
 
 
-def findImgNode(galleryData, callLevel=0) -> WebElement | None:
+def findImgNode(galleryData: GalleryData, callLevel=0) -> WebElement | None:
     imgpath = '//*[@id="slideshow"]/center/div[1]/span/img'
-    #imgpath = '/html/body/center/table[2]/tbody/tr/td[1]/table/tbody/tr/td[1]/div/center/table[2]/tbody/tr/td/table/tbody/tr/td/center/table/tbody/tr/td/div[5]/center/div[1]/span/img'
+    # imgpath = '/html/body/center/table[2]/tbody/tr/td[1]/table/tbody/tr/td[1]/div/center/table[2]/tbody/tr/td/table/tbody/tr/td/center/table/tbody/tr/td/div[5]/center/div[1]/span/img'
     ignored_exceptions = (NoSuchElementException,
                           StaleElementReferenceException)
     img = None
@@ -285,7 +291,7 @@ def findImgNode(galleryData, callLevel=0) -> WebElement | None:
         return findImgNode(galleryData, callLevel + 1)
     except TimeoutException:
         print("Time out capturing img on: " + driver.current_url())
-        print(galleryData['galleryURL'])
+        print(galleryData.galleryURL)
         currentUrl = driver.current_url()
         if (CAPTCHA_PAGE in currentUrl):
             handleCaptcha()
@@ -328,9 +334,11 @@ def removePopup():
     except ElementNotInteractableException:
         pass
 
+
 def handleCaptcha(level=0):
     print("Captcha detected")
     pass
+
 
 """
 def handleCaptcha(level=0):

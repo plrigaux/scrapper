@@ -1,33 +1,34 @@
 import yaml
 import re
 import os.path
-import collections
+
 from pathlib import Path
 import picture
 from pprint import pprint
 from picture import Picture
-import configData
 
 DATAYAML_FILE_NAME = '!data.yaml'
 
+class GalleryData():
+    galleryURL: str = None
+    nbOfPics: int = -1
+    galleryName: str = None
+    nbTotalDownloaded = -1
+    listOfPics : list[Picture] = []
+    categories : list[str] = []
 
-class GalleryData(dict):
+    def __init__(self, iterable=(), **kwargs):
+        self.__dict__.update(iterable, **kwargs)
 
-    def __init__(self, *args, **kwargs):
-        # No need for the self.__dict__ part
-        super().__init__(*args, **kwargs)
+    def has_name(self) -> bool: 
+        return self.galleryName is not None
 
-        self.clean_strings()
-
-    def clean_strings(self):
-        for key, value in self.items():
-            self[key] = self.string_empty_to_none(value)
 
     def has_key(self, name):
         return name in self
-
+"""
     def __getattr__(self, name):
-        #if not self.has_key(name):
+        # if not self.has_key(name):
         #    raise AttributeError(
         #        "Attribute \"{}\" does not exist. Here possible choices: {}".format(name, self.keys()))
         return self[name]
@@ -50,31 +51,10 @@ class GalleryData(dict):
 
         return value
 
-    @property
-    def galleryURL(self):
-        return self["galleryURL"]
+"""
 
-    @property
-    def nbOfPics(self):
-        return super().get("nbOfPics", -1)
 
-    @property
-    def nbTotalDownloaded(self):
-        return super().get("nbTotalDownloaded", -1)
-
-    @property
-    def galleryName(self):
-        return super().get("galleryName", "NO NAME")
-
-    @property
-    def listOfPics(self) -> list[Picture]:
-        return super().get("listOfPics", [])
-    
-    @property
-    def categories(self) -> list[str]:
-        return super().get("categories", [])
-
-try :
+try:
     # Read YAML file
     with open("config.yaml", 'r') as stream:
         config = yaml.safe_load(stream)
@@ -91,19 +71,19 @@ def getOutputDirectory(strPath=""):
     return dirPath
 
 
-def createAndGetOutputDirectory(strPath :str) -> str:
+def createAndGetOutputDirectory(strPath: str) -> str:
     dirPath = getOutputDirectory(strPath)
     Path(dirPath).mkdir(parents=True, exist_ok=True)
 
     return dirPath
 
 
-def dumpData(data :GalleryData):
+def dumpData(gallery: GalleryData):
 
-    dirName = createAndGetOutputDirectory(data.galleryName)
+    dirName = createAndGetOutputDirectory(gallery.galleryName)
 
     print("Dump data tracker to :", dirName)
-    data = dict(**data)
+    data = vars(gallery)
     oldPictures = data.pop('listOfPics', [])
 
     newListOfPics = {}
@@ -137,20 +117,21 @@ def dumpData(data :GalleryData):
 
 def generatePicStr(nbPictures):
     zeroPad = len(str(nbPictures))
-    #print('{} {}'.format(nbPictures, zeroPad))
+    # print('{} {}'.format(nbPictures, zeroPad))
 
     picStr = 'pic_{:0' + str(zeroPad) + 'd}'
     return picStr
 
-def updateList(data: GalleryData, listOfPics): 
+
+def updateList(data: GalleryData, listOfPics):
 
     currentList = data.listOfPics
 
     if not currentList:
         data.listOfPics = listOfPics
-    
-    else: 
-    
+
+    else:
+
         for picCurr, picScraped, i, j in zip(currentList, listOfPics, range(len(currentList)), range(len(listOfPics))):
             pass
 
@@ -203,7 +184,7 @@ def loadGalleryData(loader, node):
     return g
 
 
-def getCurrentData(directory:str) -> GalleryData:
+def getCurrentData(directory: str) -> GalleryData:
     fileName = os.path.join(directory, DATAYAML_FILE_NAME)
     fileName = os.path.normpath(fileName)
 
@@ -215,7 +196,6 @@ def getCurrentData(directory:str) -> GalleryData:
         "tag:yaml.org,2002:python/object/new:configData.GalleryData", loadGalleryData)
     with open(fileName, 'r') as stream:
         data = yaml.load(stream, Loader=yaml.Loader)
-
 
     gallery = GalleryData(data)
     picsDict = gallery.listOfPics
@@ -237,7 +217,7 @@ if __name__ == "__main__":
 
     data = getCurrentData(directory)
 
-    pprint(data)
+    pprint(vars(data))
 
 """     l = data['listOfPics']
 
