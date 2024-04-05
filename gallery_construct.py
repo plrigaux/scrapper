@@ -1,4 +1,5 @@
 from pprint import pprint
+from common import DOWNLOADED, NEW
 from webdriver import MyDriver
 import configData
 import utilities
@@ -6,8 +7,10 @@ import re
 from selenium.webdriver.common.by import By
 from picture import Picture
 from selenium.common.exceptions import NoSuchElementException
+import os.path
 
 PARAMS = {'page': '0', 'view': '2'}
+
 
 def setUpGallery(driver : MyDriver, gallery) -> str:
     print("setUpGallery")
@@ -40,34 +43,53 @@ def setUpGallery(driver : MyDriver, gallery) -> str:
 def buildGallery(driver: MyDriver, galleryUrl : str) -> configData.GalleryData:
 
     print("Gallery Url", galleryUrl)
-    print("Stuff")
+    print("!!!")
   
 
-    basicGalleryData = basicGallery(driver, galleryUrl)
-    print("Basic", basicGalleryData)
+    basic_gallery_data = basicGallery(driver, galleryUrl)
+    print("Basic", basic_gallery_data)
 
-    currentGalleryData = getLocal(basicGalleryData)
+    local_current_gallery_data = get_local_gallery_data(basic_gallery_data)
 
     theGallery = None
 
     currentGalleryOK = False
-    if currentGalleryData:
+    if local_current_gallery_data:
         
-        if basicGalleryData.nbOfPics != len(currentGalleryData.listOfPics):
-            print("Current Mismatch nbOfPics={} listOfPics.len={}".format(currentGalleryData.nbOfPics, len(currentGalleryData.listOfPics)))
+        if basic_gallery_data.nbOfPics != len(local_current_gallery_data.listOfPics):
+            print("CURRENT MISMATCH nbOfPics={} listOfPics.len={}".format(local_current_gallery_data.nbOfPics, len(local_current_gallery_data.listOfPics)))
         else:
             currentGalleryOK = True
 
     if not currentGalleryOK:
-        listOfPics = acquirePictures(driver, basicGalleryData)
-        basicGalleryData.listOfPics = listOfPics
-        theGallery = basicGalleryData
-    else: 
-        theGallery = currentGalleryData
+        listOfPics = acquirePictures(driver, basic_gallery_data)
+        
+        basic_gallery_data.listOfPics = listOfPics
 
-    configData.dumpData(theGallery, None)
+        check_local(basic_gallery_data, local_current_gallery_data)
+        theGallery = basic_gallery_data
+    else: 
+        theGallery = local_current_gallery_data
+
+
+    theGallery.nbOfPics = len(theGallery.listOfPics)
+    configData.dumpData(theGallery)
 
     return theGallery
+
+def check_local(basic_gallery_data :configData.GalleryData, local_current_gallery_data: configData.GalleryData):
+ 
+    print("Check local Drive") 
+
+    gallery_directory = configData.createAndGetOutputDirectory(
+        basic_gallery_data.galleryName)
+    for pic in basic_gallery_data.listOfPics:
+        fileName = os.path.join(gallery_directory, pic.fileName  )
+        fileName = os.path.normpath(fileName)
+
+        if os.path.isfile(fileName):
+            pic.status = DOWNLOADED 
+            print("File", pic.fileName, "exists") 
 
 
 def basicGallery(driver: MyDriver, galleryUrl : str) -> configData.GalleryData:
@@ -121,11 +143,11 @@ def basicGallery(driver: MyDriver, galleryUrl : str) -> configData.GalleryData:
 
     return basicGalleryData
 
-def getLocal(galleryData: configData.GalleryData) -> configData.GalleryData:
-    dirName = configData.createAndGetOutputDirectory(
+def get_local_gallery_data(galleryData: configData.GalleryData) -> configData.GalleryData:
+    gallery_directory = configData.createAndGetOutputDirectory(
         galleryData.galleryName)
-    print("Output dir: ", dirName)
-    currentGalleryData = configData.getCurrentData(dirName)
+    print("Local gallery location: ", gallery_directory)
+    currentGalleryData = configData.getCurrentData(gallery_directory)
 
     if currentGalleryData:
         currentGalleryData.galleryURL = galleryData.galleryURL
@@ -134,7 +156,7 @@ def getLocal(galleryData: configData.GalleryData) -> configData.GalleryData:
 
         nbTotalDownloaded = 0
         for picture in currentGalleryData.listOfPics:
-            if picture.status == "downloaded":
+            if picture.status.upper() == DOWNLOADED:
                 nbTotalDownloaded += 1
 
         currentGalleryData.nbTotalDownloaded = nbTotalDownloaded
@@ -153,11 +175,11 @@ def getLocal(galleryData: configData.GalleryData) -> configData.GalleryData:
         else:
             galleryData.nbBatchDownloaded = 0
             galleryData.nbTotalDownloaded = 0
-            configData.dumpData(galleryData, dirName)
+            configData.dumpData(galleryData)
     else:
         galleryData.nbBatchDownloaded = 0
         galleryData.nbTotalDownloaded = 0
-        configData.dumpData(galleryData, dirName)
+        configData.dumpData(galleryData)
 
 
 
@@ -229,7 +251,7 @@ def acquirePictures_per_page(driver : MyDriver, page_id : int, galleryData: conf
     cur_index = len(listOfPics)
     for i, item in enumerate(listId):
         href = listURL[i].get_attribute('href')
-        pic = Picture(i + cur_index, href, item.text, 'new')
+        pic = Picture(i + cur_index, href, item.text, NEW)
         listOfPics.append(pic)
 
     print("listOfPics", len(listOfPics))

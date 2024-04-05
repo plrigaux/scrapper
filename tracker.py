@@ -6,13 +6,11 @@ import configData
 from pathlib import Path
 import os
 import datetime
-import configData
 from pprint import pprint
 
+from common import *
 TRACKER_FILE_NAME = "tracker.yaml"
-FAILED = "FAILED"
-IN_PROGRESS = "IN_PROGRESS"
-NEW = "NEW"
+
 
 galleries = {}
 
@@ -37,6 +35,10 @@ class TrackedGallery():
     @property
     def url(self):
         return self.__dict__["url"]
+    
+    def status(self) -> str:
+        return self.__dict__["status"]
+
 
     def __str__(self) -> str:
         #return __repr__()
@@ -108,7 +110,7 @@ def new_url(url: str):
     gallery = configData.GalleryData()
 
 
-    gallery.galleryName = "Unknown"
+    gallery.galleryName = UNKNOWN
     gallery.galleryURL = url
     gallery.nbOfPics = -1
     gallery.nbTotalDownloaded= -1
@@ -117,7 +119,7 @@ def new_url(url: str):
 
 def success(galleryData: configData.GalleryData):
    
-    galleryData.status = "SUCCESS"
+    galleryData.status = SUCCESS
     load()
     # remove the tracking of sussessfull
     print("Gallery size B {}".format(len(galleries)))
@@ -195,8 +197,21 @@ def displayTraker():
     load()
     print_tracked_info()
 
+def galleries_filter(pair: tuple[str, TrackedGallery]) -> bool:
+
+    key, value  = pair
+
+    if value.status == "FAILED2":
+        return False
+
+    return True
+
 def print_tracked_info():
-    print(yaml.dump(galleries, default_flow_style=False))
+
+    filtered_galleries = dict(filter(galleries_filter, galleries.items()))
+
+    dumb = yaml.dump(filtered_galleries, default_flow_style=False)
+    print(dumb)
     print("Tracked Total galleries : ", len(galleries))
     nbOfPics = sum(int(p.nbOfPics) for p in galleries.values())
     print("Tracked Total pictures : ", nbOfPics)

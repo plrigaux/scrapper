@@ -60,7 +60,7 @@ def checkGalleryStatus(fileName):
 
         pp = pprint.PrettyPrinter(indent=4)
         pp.pprint(data)
-        configData.dumpData(data, fileName)
+        configData.dumpData(data)
         data = configData.GalleryData(**data)
 
     nbOfPics = data.getNbOfPics()

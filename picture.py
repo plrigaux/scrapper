@@ -1,5 +1,6 @@
+import common
 class Picture:
-    def __init__(self, index=-1, href="", fileName=None, status='new', **entries):
+    def __init__(self, index=-1, href="", fileName=None, status=common.NEW, **entries):
         self.index = index
         self.href = href
         self.fileName = fileName

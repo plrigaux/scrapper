@@ -4,10 +4,11 @@ import os.path
 import collections
 from pathlib import Path
 import picture
-import pprint
+from pprint import pprint
 from picture import Picture
+import configData
 
-dataYaml = '!data.yaml'
+DATAYAML_FILE_NAME = '!data.yaml'
 
 
 class GalleryData(dict):
@@ -66,7 +67,7 @@ class GalleryData(dict):
         return super().get("galleryName", "NO NAME")
 
     @property
-    def listOfPics(self) -> list:
+    def listOfPics(self) -> list[Picture]:
         return super().get("listOfPics", [])
     
     @property
@@ -97,12 +98,11 @@ def createAndGetOutputDirectory(strPath :str) -> str:
     return dirPath
 
 
-def dumpData(data :GalleryData, dirName :str):
+def dumpData(data :GalleryData):
 
-    if not dirName:
-        dirName = createAndGetOutputDirectory(data.galleryName)
+    dirName = createAndGetOutputDirectory(data.galleryName)
 
-    print("Dump to ", dirName)
+    print("Dump data tracker to :", dirName)
     data = dict(**data)
     oldPictures = data.pop('listOfPics', [])
 
@@ -127,7 +127,7 @@ def dumpData(data :GalleryData, dirName :str):
 
     data['listOfPics'] = newListOfPics
 
-    outputFile = os.path.join(dirName, dataYaml)
+    outputFile = os.path.join(dirName, DATAYAML_FILE_NAME)
     with open(outputFile, 'w') as file:
         yaml.dump(
             data, file,  default_flow_style=False, sort_keys=False)
@@ -204,11 +204,11 @@ def loadGalleryData(loader, node):
 
 
 def getCurrentData(directory:str) -> GalleryData:
-    fileName = os.path.join(directory, dataYaml)
+    fileName = os.path.join(directory, DATAYAML_FILE_NAME)
     fileName = os.path.normpath(fileName)
 
     if (os.path.exists(fileName) == False):
-        print("file doesn't exists: " + fileName)
+        print("file doesn't exists: ", fileName)
         return None
 
     yaml.add_constructor(
@@ -227,6 +227,7 @@ def getCurrentData(directory:str) -> GalleryData:
 
     gallery.listOfPics = pics
 
+    pprint(gallery)
     return gallery
 
 
@@ -236,7 +237,7 @@ if __name__ == "__main__":
 
     data = getCurrentData(directory)
 
-    pprint.pprint(data)
+    pprint(data)
 
 """     l = data['listOfPics']
 

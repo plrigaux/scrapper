@@ -2,12 +2,13 @@ import configData
 import glob
 import yaml
 import os
+import tracker
 
 def main():
     root_dir = configData.getOutputDirectory()
     print("Root dir:", root_dir)
 
-    file_list = glob.glob('./*/!data.yaml', root_dir=root_dir)
+    file_list = glob.glob('./*/' + tracker.TRACKER_FILE_NAME, root_dir=root_dir)
 
     print("File list size:", len(file_list))
     #print(*file_list, sep = "\n")

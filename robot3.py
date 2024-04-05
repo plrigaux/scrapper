@@ -32,10 +32,11 @@ import tracker
 import argparse
 from pprint import pprint
 
+
+from common import *
+
 driver = None
-CAPTCHA_PAGE = 'human-verification'
-FAILED = 'failed'
-NEW = 'new'
+
 # see all pictures
 
 #Picture = collections.namedtuple('Picture', 'index href fileName')
@@ -80,15 +81,13 @@ def mainGalleryGrabber(galleryUrl: str):
         mainGalleryGrabber2(galleryData)
     finally:
         if galleryData:
-            if galleryData.has_key('galleryName'):
-                dirName = configData.createAndGetOutputDirectory(
-                    galleryData.galleryName)
-                configData.dumpData(galleryData, dirName)
+            if galleryData.has_key('galleryName'):        
+                configData.dumpData(galleryData)
 
-            status = "SUCCESS"
+            status = SUCCESS
             if galleryData.nbOfPics != galleryData.nbTotalDownloaded:
                 tracker.failed(galleryData)
-                status = tracker.FAILED
+                status = FAILED
 
         print()
         print()
@@ -138,6 +137,7 @@ def mainGalleryGrabber2(galleryData: configData.GalleryData):
 def thePictureGraber(galleryData):
     dirName = configData.createAndGetOutputDirectory(
         galleryData.galleryName)
+    
     print("Output dir: ", dirName)
     listOfPics = galleryData.listOfPics
     galleryDataLenght = len(listOfPics)
@@ -186,7 +186,7 @@ def thePictureGraber(galleryData):
 
         galleryData['nbTotalDownloaded'] = nbTotalDownloaded
 
-    print("Output dir: " + dirName)
+    configData.dumpData(galleryData)
 
 def get_file_name(dirName, picture):
     fn = picture.fileName
@@ -197,7 +197,7 @@ def get_file_name(dirName, picture):
 def downloadImage(galleryData : GalleryData, nbBatchDownloaded: int, nbTotalDownloaded : int, picture, file_name) -> int:
     if (downloadImage1(picture.imgSrc, file_name) == True):
                 #downloadImage2(img, file_name)
-        picture.status = 'downloaded'
+        picture.status = DOWNLOADED
         nbBatchDownloaded = nbBatchDownloaded + 1
         galleryData['nbBatchDownloaded'] = nbBatchDownloaded
         nbTotalDownloaded = nbTotalDownloaded + 1
@@ -378,7 +378,7 @@ def handleCaptcha(level=0):
     if (CAPTCHA_PAGE in current_url):
         handleCaptcha(level + 1)
 
-"""
+
 
 def get_captcha(driver, element, path):
     # now that we have the preliminary stuff out of the way time to get that image :D
@@ -399,6 +399,6 @@ def get_captcha(driver, element, path):
     image = image.convert('RGB')
     image.save(path, 'jpeg')  # saves new cropped image
 
-
+"""
 if __name__ == '__main__':
     main()
