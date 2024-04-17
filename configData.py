@@ -4,28 +4,39 @@ import os.path
 
 from pathlib import Path
 import picture
-from pprint import pprint
+#from pprint import pprint
+import pprint
 from picture import Picture
+import json
 
 DATAYAML_FILE_NAME = '!data.yaml'
 
-class GalleryData():
+
+class GalleryData(object):
     galleryURL: str = None
     nbOfPics: int = -1
     galleryName: str = None
     nbTotalDownloaded = -1
-    listOfPics : list[Picture] = []
-    categories : list[str] = []
+    listOfPics: list[Picture] = []
+    categories: list[str] = []
 
     def __init__(self, iterable=(), **kwargs):
         self.__dict__.update(iterable, **kwargs)
 
-    def has_name(self) -> bool: 
+    def has_name(self) -> bool:
         return self.galleryName is not None
+    
+    def __repr__(self) -> str:
+        #print("!!!!!!!!!!!!!!!!!!!!!", self.__dict__.keys())
+        to_out_str = {}
+        your_blacklisted_set = ["listOfPics"]
+        for key, value in self.__dict__.items():
+            if key not in your_blacklisted_set:
+                to_out_str[key] = value
+        
+        return str(to_out_str)
 
 
-    def has_key(self, name):
-        return name in self
 """
     def __getattr__(self, name):
         # if not self.has_key(name):
@@ -207,9 +218,14 @@ def getCurrentData(directory: str) -> GalleryData:
 
     gallery.listOfPics = pics
 
-    pprint(gallery)
+    print_gallery(gallery)
     return gallery
 
+def print_gallery(gallery :GalleryData):
+     #data = vars(gallery)
+     #pretty_json = json.dumps(data, indent=4)
+     #print(pretty_json)
+     pprint.pprint(vars(gallery), depth=6, sort_dicts=False)
 
 if __name__ == "__main__":
     print("tests")
@@ -217,9 +233,4 @@ if __name__ == "__main__":
 
     data = getCurrentData(directory)
 
-    pprint(vars(data))
-
-"""     l = data['listOfPics']
-
-    for i, val in enumerate(l, start=100):
-        print(i, val) """
+    print_gallery(data)

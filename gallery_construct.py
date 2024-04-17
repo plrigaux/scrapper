@@ -251,7 +251,7 @@ def acquirePictures_per_page(driver : MyDriver, page_id : int, galleryData: conf
     cur_index = len(listOfPics)
     for i, item in enumerate(listId):
         href = listURL[i].get_attribute('href')
-        pic = Picture(i + cur_index, href, item.text, NEW)
+        pic = Picture(i + cur_index, item.text, NEW, href)
         listOfPics.append(pic)
 
     print("listOfPics", len(listOfPics))

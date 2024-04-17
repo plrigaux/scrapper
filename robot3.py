@@ -60,12 +60,17 @@ def main():
         print("Don't use tracker")
         use_tracker = False
 
-    while True:
-        galleryURL = source_getter.getFirstValid(use_tracker=use_tracker)
+    try:
+        while True:
+            galleryURL = source_getter.getFirstValid(use_tracker=use_tracker)
 
-        mainGalleryGrabber(galleryURL)
-        use_tracker = True
-
+            mainGalleryGrabber(galleryURL)
+            use_tracker = True
+    except KeyboardInterrupt:
+            print()
+            print('Interrupted')
+            driver.quit()
+            exit()
 
 def mainGalleryGrabber(galleryUrl: str):
 
@@ -79,29 +84,38 @@ def mainGalleryGrabber(galleryUrl: str):
         galleryData = gc.buildGallery(driver, galleryUrl)
         tracker.in_progress(galleryData, galleryUrl)
         mainGalleryGrabber2(galleryData)
-    except KeyboardInterrupt:
-        print('Interrupted')
+    
     finally:
-        if galleryData:
-            if galleryData.has_name():
-                configData.dumpData(galleryData)
-
-            status = SUCCESS
-            if galleryData.nbOfPics != galleryData.nbTotalDownloaded:
-                tracker.failed(galleryData)
-                status = FAILED
 
         print()
         print()
         print("--------- END ----------")
         print("Gallery directory: ", dirName)
-        print("Gallery url: ", galleryData.galleryURL)
-        print("Gallery name: ", galleryData.galleryName)
-        print("Gallery number of files: ", galleryData.nbOfPics)
-        print("Gallery file dowloaded: ", galleryData.nbTotalDownloaded)
+        status = FAILED
+
+        if galleryData:
+            if galleryData.has_name():
+                configData.dumpData(galleryData)
+
+            if galleryData.nbOfPics != galleryData.nbTotalDownloaded:
+                tracker.failed(galleryData)
+            else: 
+                status = SUCCESS
+
+            print("Gallery url: ", galleryData.galleryURL)
+            print("Gallery name: ", galleryData.galleryName)
+            print("Gallery number of files: ", galleryData.nbOfPics)
+            print("Gallery file dowloaded: ", galleryData.nbTotalDownloaded)
+
+
+        else:
+            status = FAILED
+            pass
+
         print(status)
         print()
         print()
+
 
 
 def mainGalleryGrabber2(galleryData: GalleryData):
