@@ -1,6 +1,5 @@
 from nturl2path import url2pathname
-from typing import Dict
-from unicodedata import name
+from configData import GalleryData
 import yaml
 import configData
 from pathlib import Path
@@ -106,14 +105,11 @@ def in_progress(galleryData: configData.GalleryData, old_gallery_url : str):
 def failed(galleryData: configData.GalleryData):
     save_a_process_gallery(galleryData, status=FAILED)
 
+def invalid_gallery_url(galleryData: GalleryData):
+    save_a_process_gallery(galleryData, status=INVALID_GALLERY_URL)
+
 def new_url(url: str):
-    gallery = configData.GalleryData()
-
-
-    gallery.galleryName = UNKNOWN
-    gallery.galleryURL = url
-    gallery.nbOfPics = -1
-    gallery.nbTotalDownloaded= -1
+    gallery = GalleryData(url)
 
     save_a_process_gallery(gallery, status=NEW)
 
@@ -166,6 +162,12 @@ def getFirst(status) -> str:
 
 def load():
     global galleries
+
+    print("TRACKER FILE:", Path(tracker_file).absolute())
+    
+    #Create if doesnt exist
+    Path(tracker_file).touch(exist_ok=True)
+
     with open(tracker_file, 'r') as stream:
         data = yaml.load(stream, Loader=yaml.Loader)
 
@@ -187,11 +189,8 @@ def load():
 
     #print(galleries)
 
-
 outDir = configData.getOutputDirectory()
 tracker_file = os.path.join(outDir, TRACKER_FILE_NAME)
-tracker_file_path = Path(tracker_file)
-tracker_file_path.touch(exist_ok=True)
 
 def displayTraker():
     load()

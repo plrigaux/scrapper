@@ -1,6 +1,6 @@
-from pprint import pprint
 from common import DOWNLOADED, NEW
 from webdriver import MyDriver
+from configData import GalleryData
 import configData
 import utilities
 import re
@@ -10,6 +10,18 @@ from selenium.common.exceptions import NoSuchElementException
 import os.path
 
 PARAMS = {'page': '0', 'view': '2'}
+
+class InvalidGalleryURL(Exception):
+    def __init__(self, original_gallery_url :str, current_gallery_url :str, gallery_data : GalleryData):      
+
+        message = f"Inavalid Gallery URL!\n original: {original_gallery_url}\n actual:{current_gallery_url}"      
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+            
+        # Now for your custom code...
+        self.original_gallery_url = original_gallery_url
+        self.current_gallery_url = current_gallery_url
+        self.gallery_data = gallery_data
 
 
 def setUpGallery(driver : MyDriver, gallery) -> str:
@@ -40,7 +52,7 @@ def setUpGallery(driver : MyDriver, gallery) -> str:
     return url
 
 
-def buildGallery(driver: MyDriver, galleryUrl : str) -> configData.GalleryData:
+def buildGallery(driver: MyDriver, galleryUrl : str) -> GalleryData:
 
     print("Gallery Url", galleryUrl)
     print("!!!")
@@ -77,7 +89,7 @@ def buildGallery(driver: MyDriver, galleryUrl : str) -> configData.GalleryData:
 
     return theGallery
 
-def check_local(basic_gallery_data :configData.GalleryData, local_current_gallery_data: configData.GalleryData):
+def check_local(basic_gallery_data :GalleryData, local_current_gallery_data: GalleryData):
  
     print("Check local Drive") 
 
@@ -92,13 +104,20 @@ def check_local(basic_gallery_data :configData.GalleryData, local_current_galler
             print("File", pic.fileName, "exists") 
 
 
-def basicGallery(driver: MyDriver, galleryUrl : str) -> configData.GalleryData:
-    basicGalleryData = configData.GalleryData()
+def basicGallery(driver: MyDriver, galleryUrl : str) -> GalleryData:
+    basicGalleryData = GalleryData(galleryUrl)
 
     cleanGalleryUrl = setUpGallery(driver, galleryUrl)
 
     driver.get(cleanGalleryUrl)
 
+    current_gallery_url = driver.current_url()
+    print("CURRENT GALLERY URL", current_gallery_url)
+
+    if (current_gallery_url == "https://www.imagefap.com/gallery.php") :
+        print("BAD GALLERY URL")
+        raise InvalidGalleryURL(galleryUrl, current_gallery_url, basicGalleryData)
+    
 
     print('---------------------------------------------------------')
     basicGalleryData.galleryName = utilities.getGalleryNameFromURL(galleryUrl)
@@ -143,7 +162,7 @@ def basicGallery(driver: MyDriver, galleryUrl : str) -> configData.GalleryData:
 
     return basicGalleryData
 
-def get_local_gallery_data(galleryData: configData.GalleryData) -> configData.GalleryData:
+def get_local_gallery_data(galleryData: configData.GalleryData) -> GalleryData:
     gallery_directory = configData.createAndGetOutputDirectory(
         galleryData.galleryName)
     print("Local gallery location: ", gallery_directory)

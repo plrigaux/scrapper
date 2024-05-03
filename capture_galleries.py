@@ -1,7 +1,7 @@
 from webdriver import MyDriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
-import configData
+from configData import GalleryData
 import tracker
 
 def main():
@@ -56,7 +56,7 @@ def main():
 
 def save_gallery(name :str, href, nb):
 
-    basicGalleryData = configData.GalleryData()
+    basicGalleryData = GalleryData()
 
     basicGalleryData.galleryName = name
     basicGalleryData.galleryURL = href

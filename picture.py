@@ -1,5 +1,5 @@
 import common
-#import json
+import pprint
 
 
 class Picture:
@@ -18,8 +18,7 @@ class Picture:
 
     def __repr__(self) -> str:
         #print("!!!!!!!!!!!!!!!!!!!!!", self.__dict__.keys())
-        return str(self.__dict__)
-
+        return pprint.pformat(self.__dict__, indent=4)
 
 """
     def __repr__(self) -> str:

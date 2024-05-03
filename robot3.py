@@ -1,5 +1,4 @@
 from webdriver import MyDriver
-from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -9,8 +8,8 @@ from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.common.exceptions import ElementNotInteractableException
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
+from gallery_construct import InvalidGalleryURL
 
 
 import gallery_construct as gc
@@ -84,6 +83,10 @@ def mainGalleryGrabber(galleryUrl: str):
         galleryData = gc.buildGallery(driver, galleryUrl)
         tracker.in_progress(galleryData, galleryUrl)
         mainGalleryGrabber2(galleryData)
+    except InvalidGalleryURL as ige:
+        print(ige)
+        tracker.invalid_gallery_url()
+        
     
     finally:
 

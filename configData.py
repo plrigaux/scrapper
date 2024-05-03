@@ -7,7 +7,7 @@ import picture
 #from pprint import pprint
 import pprint
 from picture import Picture
-import json
+from common import *
 
 DATAYAML_FILE_NAME = '!data.yaml'
 
@@ -15,13 +15,16 @@ DATAYAML_FILE_NAME = '!data.yaml'
 class GalleryData(object):
     galleryURL: str = None
     nbOfPics: int = -1
-    galleryName: str = None
+    galleryName: str = UNKNOWN
     nbTotalDownloaded = -1
     listOfPics: list[Picture] = []
     categories: list[str] = []
 
-    def __init__(self, iterable=(), **kwargs):
-        self.__dict__.update(iterable, **kwargs)
+
+    def __init__(self, galleryURL=None, galleryName = UNKNOWN):
+        self.galleryURL = galleryURL
+        self.galleryName = galleryName
+
 
     def has_name(self) -> bool:
         return self.galleryName is not None
@@ -73,6 +76,25 @@ except:
     # Read YAML file
     with open("../config.yaml", 'r') as stream:
         config = yaml.safe_load(stream)
+
+def from_dict(data: dict) ->GalleryData: 
+    gallery = GalleryData()
+
+    for key, value in data.items(): 
+        gallery.__dict__[key] = value
+
+    pics = []
+
+    list_picture_map = data["listOfPics"]
+
+    for pic in list_picture_map.values():
+        a = picture.Picture(**pic)
+        pics.append(a)
+
+    gallery.listOfPics = pics
+
+    return gallery
+
 
 
 def getOutputDirectory(strPath=""):
@@ -208,28 +230,30 @@ def getCurrentData(directory: str) -> GalleryData:
     with open(fileName, 'r') as stream:
         data = yaml.load(stream, Loader=yaml.Loader)
 
-    gallery = GalleryData(data)
-    picsDict = gallery.listOfPics
+    try:
+        gallery = from_dict(data)
+    except Exception as e:
+        print("FAIL to load gallery from ", fileName)
+        raise e
 
-    pics = []
-    for pic in picsDict.values():
-        a = picture.Picture(**pic)
-        pics.append(a)
 
-    gallery.listOfPics = pics
-
-    print_gallery(gallery)
+    #print_gallery(gallery)
     return gallery
 
 def print_gallery(gallery :GalleryData):
      #data = vars(gallery)
      #pretty_json = json.dumps(data, indent=4)
      #print(pretty_json)
+     if gallery is None:
+         print("Gallery is None!")
+         return
+     
      pprint.pprint(vars(gallery), depth=6, sort_dicts=False)
 
 if __name__ == "__main__":
     print("tests")
-    directory = r"/media/plr/DATA/media/xtreamdownloader/1030"
+    directory = r"/mnt/samdata/media/xtreamdownloader/With painted nails, and a shaved muff_ she's ready for the wolf"
+    directory = r"/mnt/samdata/media/xtreamdownloader/StarWars Hors Wookie Sex"
 
     data = getCurrentData(directory)
 
