@@ -42,7 +42,7 @@ driver = None
 
 
 def main():
-    print("Scrap ImageFap.com -- go for it")
+    print("Scrap ImageFap.com -- go for it man")
     parser = argparse.ArgumentParser(description="Robot scraper",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-t", "--notrack", action="store_true",
