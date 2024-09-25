@@ -2,3 +2,6 @@
 outputDirectory: /mnt/samdata/media/xtreamdownloader
 #browser=firefox
 browser: chrome
+collectionDirectories:
+  - /mnt/samdata/media/img/Nude in public
+  - /mnt/samdata/media/img/Cartoon

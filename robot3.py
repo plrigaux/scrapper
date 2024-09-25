@@ -5,7 +5,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
-from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.common.exceptions import ElementNotInteractableException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.remote.webelement import WebElement
@@ -108,7 +107,7 @@ def mainGalleryGrabber(galleryUrl: str):
             print("Gallery url: ", galleryData.galleryURL)
             print("Gallery name: ", galleryData.galleryName)
             print("Gallery number of files: ", galleryData.nbOfPics)
-            print("Gallery file dowloaded: ", galleryData.nbTotalDownloaded)
+            print("Gallery file downloaded: ", galleryData.nbTotalDownloaded)
 
 
         else:
@@ -163,7 +162,7 @@ def thePictureGraber(galleryData: GalleryData):
     nbBatchDownloaded = 0
     nbTotalDownloaded = 0
 
-    print("Going to dowload a gallery of '{}' items".format(galleryDataLenght))
+    print("Going to download a gallery of '{}' items".format(galleryDataLenght))
     # TODO not download option
 
     # TODO handle https://www.imagefap.com/rl_captcha.php

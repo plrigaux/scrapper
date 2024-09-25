@@ -97,9 +97,29 @@ def from_dict(data: dict) ->GalleryData:
 
 
 
-def getOutputDirectory(strPath=""):
-    strPath = re.sub(r'[<>:"/\|?*]', '_', strPath)
-    dirPath = os.path.join(config["outputDirectory"], strPath)
+def getOutputDirectory(strPath="") -> str:
+
+    root_dir_list = config["collectionDirectories"]
+    default_dir = config["outputDirectory"]
+
+    if strPath:
+        strPath = re.sub(r'[<>:"/\|?*]', '_', strPath)
+
+        # give the collection path first
+        for root_dir in root_dir_list:
+            dirPath = os.path.join(root_dir, strPath)
+            dirPath = os.path.normpath(dirPath)
+
+            my_file = Path(dirPath)
+            if my_file.is_dir():
+
+                # ensure that the dir has a data file
+                fileName = os.path.join(my_file, DATAYAML_FILE_NAME)
+                data_file = Path(fileName)
+                if data_file.is_file():
+                    return dirPath
+
+    dirPath = os.path.join(default_dir, strPath)
     dirPath = os.path.normpath(dirPath)
     return dirPath
 
